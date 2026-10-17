@@ -1715,22 +1715,48 @@ if (window.claude && window.claude.hot && window.claude.hot.snapshot){
   try{ window.claude.hot.snapshot(()=>({state})); }catch(_){}
 }
 /* Soft access gate for the pilot: deters casual viewers, not a security control. Code is set below. */
-/* Owner controls: change GATE_CODE and every phone must key the new code; set APP_ENABLED=false to switch the form off for everyone. */
-const GATE_CODE="ZONE9";
-const APP_ENABLED=true;
+/* Owner controls live in control.json next to this page: the access code, on/off, and how many days a phone may run offline.
+   Every open checks it online. Changing the code, setting "enabled": false, or taking the site down locks every phone,
+   including home-screen and offline copies (offline copies lock once their offline allowance runs out). */
+const GATE_FALLBACK="ZONE9";
 (function(){
-  let ok=false; try{ ok = APP_ENABLED && localStorage.getItem("ecc-gate")===GATE_CODE; }catch(_){}
-  const g=document.getElementById("gate");
-  if (ok) return;
-  g.hidden=false;
-  document.getElementById("gate-form").addEventListener("submit", e=>{
-    e.preventDefault();
-    const v=document.getElementById("gate-code").value.trim().toUpperCase();
-    if (!APP_ENABLED){ document.getElementById("gate-err").textContent="This form has been switched off by its owner."; return; }
-    if (v===GATE_CODE){ try{ localStorage.setItem("ecc-gate",GATE_CODE); }catch(_){} g.hidden=true; }
-    else document.getElementById("gate-err").textContent="That code is not right. Check with the FME.";
+  const g=document.getElementById("gate"), err=document.getElementById("gate-err"), inp=document.getElementById("gate-code"), btn=g.querySelector('button[type="submit"]');
+  const LS=k=>{ try{ return localStorage.getItem(k); }catch(_){ return null; } };
+  const SET=(k,v)=>{ try{ if(v===null) localStorage.removeItem(k); else localStorage.setItem(k,v); }catch(_){} };
+  let ctl=null; try{ ctl=JSON.parse(LS("ecc-ctl")||"null"); }catch(_){}
+  const code=()=>String((ctl&&ctl.code)||GATE_FALLBACK).toUpperCase();
+  const days=()=>(ctl&&+ctl.offlineDays)||7;
+  const leaseOk=()=>Date.now()-(+LS("ecc-ctl-at")||0) < days()*864e5;
+  function lock(msg, canType){ g.hidden=false; err.textContent=msg||""; inp.disabled=!canType; btn.disabled=!canType; if(canType) setTimeout(()=>inp.focus(),50); }
+  async function kill(msg){
+    SET("ecc-gate",null); SET("ecc-ctl",null); SET("ecc-ctl-at",null); SET("ecc-killed",msg);
+    try{ const ks=await caches.keys(); await Promise.all(ks.map(k=>caches.delete(k))); }catch(_){}
+    try{ const rs=await navigator.serviceWorker.getRegistrations(); await Promise.all(rs.map(r=>r.unregister())); }catch(_){}
+    lock(msg,false);
+  }
+  if (LS("ecc-killed")) lock(LS("ecc-killed"), false);
+  else if (!(ctl && ctl.enabled!==false && LS("ecc-gate")===code() && leaseOk())) lock("", true);
+  const check=fetch("control.json?t="+Date.now(),{cache:"no-store"}).then(async r=>{
+    if (r.status===404||r.status===410) return kill("This form has been withdrawn by its owner.");
+    if (!r.ok) throw new Error("http "+r.status);
+    const j=await r.json(); ctl=j; SET("ecc-ctl",JSON.stringify(j)); SET("ecc-ctl-at",String(Date.now()));
+    if (j.enabled===false) return kill("This form has been switched off by its owner.");
+    SET("ecc-killed",null);
+    if (LS("ecc-gate")===code()){ g.hidden=true; err.textContent=""; } else lock("", true);
+  }).catch(()=>{
+    if (LS("ecc-killed")) lock(LS("ecc-killed"), false);
+    else if (!ctl) lock("Connect to the internet once to unlock the form.", true);
+    else if (!leaseOk()) lock("This form must go online at least once every "+days()+" days. Connect to the internet and reopen it.", false);
   });
-  setTimeout(()=>document.getElementById("gate-code").focus(),50);
+  document.getElementById("gate-form").addEventListener("submit", async e=>{
+    e.preventDefault();
+    const v=inp.value.trim().toUpperCase();
+    await check;
+    if (!ctl){ err.textContent="Connect to the internet once to unlock the form."; return; }
+    if (ctl.enabled===false){ err.textContent="This form has been switched off by its owner."; return; }
+    if (v===code()){ SET("ecc-gate",code()); g.hidden=true; err.textContent=""; }
+    else err.textContent="That code is not right. Check with the FME.";
+  });
 })();
 const hot = window.claude && window.claude.hot;
 if (hot && hot.ready) hot.ready(d=>boot(d||{}));

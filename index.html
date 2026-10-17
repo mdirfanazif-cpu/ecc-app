@@ -1,0 +1,1631 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#22406a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="ECC Audit">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui;background:#faf9f5}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>ECC Audit</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: one column of unit cards under an annex masthead; sticky score bar at the bottom; hidden A4 paper stage for export. */
+:root{
+  --bg:#f5f4f0;
+  --panel:#ffffff;
+  --ink:#1f2630;
+  --muted:#5f6974;
+  --line:#d8d9d2;
+  --navy:#22406a;
+  --navy-ink:#ffffff;
+  --accent:#1d7f6a;
+  --accent-soft:#e2f0eb;
+  --chip:#eeeee8;
+  --chip-ink:#3b4450;
+  --s-good:#12695a; --s-good-bg:#dcefe8;
+  --s-mid:#7a5f12;  --s-mid-bg:#f6ecd0;
+  --s-low:#a34e12;  --s-low-bg:#f8e3d2;
+  --s-bad:#a12b2b;  --s-bad-bg:#f6dcdc;
+  --na-ink:#5f6974; --na-bg:#e5e6e0;
+  --warn-bg:#fcf3d8; --warn-ink:#6b5310;
+  --font-ui:"Nunito Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15181c; --panel:#1d2227; --ink:#e7e9ec; --muted:#9ba4ad; --line:#343b43;
+    --navy:#243f66; --navy-ink:#f2f5f8;
+    --accent:#45b39a; --accent-soft:#1e3a33;
+    --chip:#272d34; --chip-ink:#c8cdd3;
+    --s-good:#52c3a8; --s-good-bg:#1c3d35;
+    --s-mid:#dbb75c;  --s-mid-bg:#41361d;
+    --s-low:#e38f52;  --s-low-bg:#452b18;
+    --s-bad:#e37070;  --s-bad-bg:#462020;
+    --na-ink:#9ba4ad; --na-bg:#2b3137;
+    --warn-bg:#3e3519; --warn-ink:#e9d38a;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15181c; --panel:#1d2227; --ink:#e7e9ec; --muted:#9ba4ad; --line:#343b43;
+  --navy:#243f66; --navy-ink:#f2f5f8;
+  --accent:#45b39a; --accent-soft:#1e3a33;
+  --chip:#272d34; --chip-ink:#c8cdd3;
+  --s-good:#52c3a8; --s-good-bg:#1c3d35;
+  --s-mid:#dbb75c;  --s-mid-bg:#41361d;
+  --s-low:#e38f52;  --s-low-bg:#452b18;
+  --s-bad:#e37070;  --s-bad-bg:#462020;
+  --na-ink:#9ba4ad; --na-bg:#2b3137;
+  --warn-bg:#3e3519; --warn-ink:#e9d38a;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:var(--font-ui); font-size:15.5px; line-height:1.45;
+  padding-inline:16px; padding-block:0 150px;
+}
+.wrap{max-width:900px; margin-inline:auto; display:flex; flex-direction:column; gap:16px}
+.masthead{background:var(--navy); color:var(--navy-ink); border-radius:12px; padding:22px 24px; margin-top:16px}
+.masthead .eyebrow{font-size:11.5px; letter-spacing:.12em; text-transform:uppercase; opacity:.82; margin:0 0 6px; font-weight:700}
+.masthead h1{margin:0 0 6px; font-size:26px; font-weight:800; text-wrap:balance; letter-spacing:-.01em}
+.masthead p{margin:0; font-size:14px; opacity:.9; max-width:62ch}
+.card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:18px 20px}
+.card h2{margin:0 0 4px; font-size:17px; font-weight:800}
+.step{font-size:11.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); font-weight:800; margin:0 0 3px}
+.step-plain{font-size:11.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); font-weight:800; margin:4px 0 -6px}
+.hint{color:var(--muted); font-size:13.5px; margin:0 0 12px}
+.grid2{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:12px}
+label.field{display:flex; flex-direction:column; gap:4px; font-size:13px; font-weight:600; color:var(--muted); min-width:0}
+label.field input, label.field select{
+  font-family:var(--font-ui); font-size:15px; color:var(--ink); font-weight:400;
+  background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:9px 11px; width:100%;
+}
+label.field input:focus, label.field select:focus{outline:2px solid var(--accent); outline-offset:1px}
+.part-toggles{display:flex; flex-direction:column; gap:10px; margin-top:14px}
+.ptog{display:flex; align-items:flex-start; gap:10px; font-size:14.5px}
+.ptog input{width:18px; height:18px; margin-top:3px; accent-color:var(--accent)}
+.ptog b{font-weight:700}
+.ptog .sub{color:var(--muted); font-size:13px}
+details.more{border-top:1px dashed var(--line); padding-top:8px}
+details.more summary{cursor:pointer; font-size:13.5px; color:var(--muted); font-weight:600; list-style:none; display:flex; gap:6px; align-items:center}
+details.more summary::-webkit-details-marker{display:none}
+details.more summary::before{content:"▸"; transition:transform .15s}
+details.more[open] summary::before{transform:rotate(90deg)}
+details.more .part-toggles{margin-top:10px}
+.part-head{
+  display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  padding:11px 14px; background:var(--panel); border:1px solid var(--line); border-left:4px solid var(--navy); border-radius:10px;
+}
+.part-head h2{margin:0; font-size:16px; font-weight:800}
+.part-head .pcode{color:var(--muted); font-size:13px; font-weight:600; font-variant-numeric:tabular-nums}
+.unit{background:var(--panel); border:1px solid var(--line); border-radius:12px; overflow:hidden}
+.unit-head{
+  display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+  background:none; border:0; cursor:pointer; padding:13px 14px;
+  font-family:var(--font-ui); font-size:15px; font-weight:700; color:var(--ink);
+}
+.unit-head:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
+.unit-head .num{font-size:12.5px; color:var(--muted); flex:none; font-weight:700}
+.unit-head .uname{flex:1 1 auto; min-width:0}
+.unit-head .uscore{
+  flex:none; font-size:13px; font-weight:700; font-variant-numeric:tabular-nums;
+  background:var(--accent-soft); color:var(--accent); border-radius:7px; padding:3px 9px;
+}
+.unit-head .caret{flex:none; color:var(--muted); transition:transform .15s}
+.unit.closed .caret{transform:rotate(-90deg)}
+.unit.closed .unit-body{display:none}
+.unit-body{border-top:1px solid var(--line); padding:4px 14px 12px}
+.fill-rest{display:flex; align-items:center; gap:8px; padding:8px 0 4px; font-size:13px; color:var(--muted); flex-wrap:wrap}
+.fill-rest select{font-family:var(--font-ui); font-size:13.5px; font-weight:600; background:var(--bg); color:var(--ink); border:1px solid var(--line); border-radius:6px; padding:3px 6px}
+.fill-rest button{font-family:var(--font-ui); font-size:13px; font-weight:600; background:var(--chip); color:var(--chip-ink); border:1px solid var(--line); border-radius:6px; padding:4px 11px; cursor:pointer}
+.fill-rest button:hover{border-color:var(--accent); color:var(--accent)}
+.row{padding:10px 0; border-top:1px dashed var(--line)}
+.fill-rest + .row{border-top:0}
+.row-top{display:flex; align-items:baseline; gap:8px}
+.row-top .rno{font-size:12.5px; color:var(--muted); flex:none; width:1.6em; font-weight:700}
+.row-top .rlabel{flex:1 1 auto; min-width:0; font-size:14.5px}
+.row-top .rmk-btn{flex:none; background:none; border:1px solid var(--line); border-radius:6px; color:var(--muted); font-size:12.5px; padding:2px 9px; cursor:pointer; font-family:var(--font-ui); font-weight:600}
+.row-top .rmk-btn.has{border-color:var(--accent); color:var(--accent)}
+.chips{display:flex; flex-wrap:wrap; gap:5px; margin-top:7px; padding-left:calc(1.6em + 8px)}
+.chip{
+  font-family:var(--font-ui); font-size:14px; font-weight:600; font-variant-numeric:tabular-nums;
+  min-width:36px; height:33px; padding:0 7px;
+  border:1px solid var(--line); border-radius:8px; background:var(--chip); color:var(--chip-ink);
+  cursor:pointer; display:inline-flex; align-items:center; justify-content:center;
+}
+.chip:hover{border-color:var(--accent)}
+.chip:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
+.chip.sel-good{background:var(--s-good-bg); color:var(--s-good); border-color:var(--s-good); font-weight:800}
+.chip.sel-mid{background:var(--s-mid-bg); color:var(--s-mid); border-color:var(--s-mid); font-weight:800}
+.chip.sel-low{background:var(--s-low-bg); color:var(--s-low); border-color:var(--s-low); font-weight:800}
+.chip.sel-bad{background:var(--s-bad-bg); color:var(--s-bad); border-color:var(--s-bad); font-weight:800}
+.chip.sel-na{background:var(--na-bg); color:var(--na-ink); border-color:var(--na-ink); font-weight:800}
+.rmk-wrap{margin-top:7px; padding-left:calc(1.6em + 8px)}
+.rmk-wrap[hidden]{display:none}
+.rmk-wrap input[type=text]{width:100%; font-family:var(--font-ui); font-size:14px; color:var(--ink); background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:7px 10px}
+.photo-row{display:flex; align-items:center; gap:10px; margin-top:7px; flex-wrap:wrap}
+.photo-add{font-family:var(--font-ui); font-size:13px; font-weight:700; background:var(--chip); color:var(--chip-ink); border:1px solid var(--line); border-radius:7px; padding:5px 11px; cursor:pointer}
+.photo-add:hover{border-color:var(--accent); color:var(--accent)}
+.photo-add.need{border-color:var(--s-bad); color:var(--s-bad); background:var(--s-bad-bg)}
+.photo-hint{font-size:12.5px; color:var(--muted)}
+.photo-hint.need{color:var(--s-bad); font-weight:700}
+.thumbs{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px}
+.thumb{position:relative; width:84px; height:84px; border:1px solid var(--line); border-radius:8px; overflow:hidden; background:var(--bg)}
+.thumb img{width:100%; height:100%; object-fit:cover; display:block}
+.thumb .pn{position:absolute; left:4px; bottom:4px; background:var(--navy); color:var(--navy-ink); font-size:11px; font-weight:800; padding:1px 6px; border-radius:5px}
+.thumb-del{position:absolute; top:3px; right:3px; width:22px; height:22px; border-radius:50%; border:0; background:rgba(0,0,0,.6); color:#fff; font-size:14px; line-height:22px; text-align:center; cursor:pointer; padding:0}
+.unit-score-row{display:flex; justify-content:flex-end; align-items:baseline; gap:8px; padding:10px 0 2px; border-top:1px solid var(--line); font-size:13.5px; color:var(--muted)}
+.unit-score-row b{font-size:15.5px; color:var(--ink); font-variant-numeric:tabular-nums; font-weight:800}
+details.defs{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:0}
+details.defs summary{cursor:pointer; padding:14px 18px; font-weight:700; font-size:15px; list-style:none; display:flex; gap:8px; align-items:center}
+details.defs summary::-webkit-details-marker{display:none}
+details.defs summary::before{content:"▸"; color:var(--muted); transition:transform .15s}
+details.defs[open] summary::before{transform:rotate(90deg)}
+.defs-tbl-wrap{overflow-x:auto; padding:0 18px 16px}
+table.defs-tbl{border-collapse:collapse; width:100%; font-size:13.5px; min-width:520px}
+table.defs-tbl th, table.defs-tbl td{border:1px solid var(--line); padding:6px 9px; text-align:left; vertical-align:top}
+table.defs-tbl th{background:var(--chip); font-weight:700}
+table.defs-tbl td:first-child{text-align:center; width:2.4em; font-weight:700}
+.sig-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px}
+.sig-box{display:flex; flex-direction:column; gap:8px; min-width:0}
+.sig-box .sig-title{font-size:13.5px; font-weight:700}
+.sig-box .sig-sub{font-size:12.5px; color:var(--muted); margin-top:-6px}
+.sig-canvas-wrap{position:relative; border:1px dashed var(--line); border-radius:8px; background:var(--bg)}
+.sig-canvas-wrap canvas{display:block; width:100%; height:140px; touch-action:none; border-radius:8px}
+.sig-canvas-wrap .sig-ph{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:13.5px; pointer-events:none}
+.sig-clear{align-self:flex-start; background:none; border:1px solid var(--line); border-radius:6px; color:var(--muted); font-size:13px; font-weight:600; padding:4px 10px; cursor:pointer; font-family:var(--font-ui)}
+.sig-clear:hover{color:var(--s-bad); border-color:var(--s-bad)}
+.bar{position:fixed; left:0; right:0; bottom:0; z-index:30; background:var(--panel); border-top:1px solid var(--line); padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px))}
+.bar-inner{max-width:900px; margin-inline:auto; display:flex; align-items:center; gap:14px; flex-wrap:wrap}
+.bar-scores{display:flex; gap:16px; flex-wrap:wrap; flex:1 1 auto; min-width:0}
+.bsc{font-size:12.5px; color:var(--muted); font-weight:600}
+.bsc b{display:block; font-size:15.5px; color:var(--ink); font-variant-numeric:tabular-nums; font-weight:800}
+.btn{font-family:var(--font-ui); font-size:15px; font-weight:700; border-radius:9px; cursor:pointer; padding:10px 18px; border:1px solid transparent}
+.btn.primary{background:var(--accent); color:#fff}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.primary[disabled]{opacity:.55; cursor:wait}
+.btn.ghost{background:none; border-color:var(--line); color:var(--muted)}
+.btn.ghost:hover{color:var(--s-bad); border-color:var(--s-bad)}
+.btn.small{font-size:13px; padding:6px 12px}
+.note{font-size:13.5px; color:var(--muted)}
+.note b{color:var(--ink)}
+.warnbox{background:var(--warn-bg); color:var(--warn-ink); border-radius:9px; padding:12px 14px; font-size:14px}
+.warnbox ul{margin:6px 0 10px; padding-left:18px}
+.warnbox .btn{padding:7px 14px; font-size:14px}
+.msg{font-size:14px; margin-top:8px}
+.dist-group{margin:10px 0 2px; font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--accent); font-weight:800}
+.dist-row{display:flex; gap:9px; align-items:flex-start; padding:6px 0; border-top:1px dashed var(--line); font-size:14px}
+.dist-row input{width:17px; height:17px; margin-top:2px; accent-color:var(--accent); flex:none}
+.dist-row .dn{font-weight:600}
+.dist-row .de{color:var(--muted); font-size:13px; word-break:break-all}
+.dist-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:12px}
+.dist-actions .btn{text-decoration:none; display:inline-block}
+label.field textarea{font-family:var(--font-ui); font-size:14px; color:var(--ink); background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:9px 11px; width:100%; resize:vertical}
+.stitch{margin:0 0 14px}
+.stitch img{width:100%; max-width:560px; height:auto; border:1px solid var(--line); border-radius:4px; background:#fff; display:block}
+.stitch .pi-row{display:flex; flex-wrap:wrap; align-items:center; gap:10px; font-size:13px; color:var(--muted); font-weight:600; margin-top:6px}
+.msg.ok{color:var(--s-good); font-weight:600}
+.pdf-actions{display:flex; flex-wrap:wrap; gap:10px; margin-top:12px}
+.sp-row{display:flex; gap:8px; margin-top:8px; flex-wrap:wrap}
+.sp-row input{flex:1 1 200px; font-family:var(--font-ui); font-size:14px; color:var(--ink); background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:8px 10px; min-width:0}
+.sp-row button{font-family:var(--font-ui); font-size:13px; font-weight:700; background:var(--chip); color:var(--chip-ink); border:1px solid var(--line); border-radius:7px; padding:6px 12px; cursor:pointer}
+.sp-row button:hover{border-color:var(--accent); color:var(--accent)}
+#sp-sel{width:100%; margin-top:8px; font-family:var(--font-ui); font-size:14px; color:var(--ink); background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:8px 10px}
+.m365-block{border-top:1px dashed var(--line); margin-top:14px; padding-top:10px}
+.m365-block[hidden]{display:none}
+.msg a{color:var(--accent); font-weight:700}
+.btn.dl{background:var(--navy); color:var(--navy-ink)}
+.btn.dl:hover{filter:brightness(1.1)}
+.btn.dl[disabled]{opacity:.55; cursor:wait}
+.msg.err{color:var(--s-bad)}
+.draft-dot{font-size:12px; color:var(--muted); font-weight:600}
+.footnote{font-size:13px; color:var(--muted); padding-bottom:8px}
+.footnote p{margin:4px 0}
+.pages-list{display:flex; flex-direction:column; gap:14px}
+.page-item{display:flex; flex-direction:column; gap:6px}
+.page-item img{width:100%; max-width:560px; height:auto; border:1px solid var(--line); border-radius:4px; background:#fff; display:block}
+.page-item .pi-row{display:flex; align-items:center; gap:10px; font-size:13px; color:var(--muted); font-weight:600}
+.savehow{background:var(--accent-soft); color:var(--ink); border-radius:9px; padding:12px 14px; font-size:14px; margin:0 0 12px}
+.savehow b{color:var(--accent)}
+#paper-stage{position:absolute; left:-20000px; top:0; width:794px}
+
+/* ---- Paper (A4 export) — mirrors the hardcopy, Arial like the original ---- */
+.paper{width:794px; height:1123px; background:#ffffff; color:#000000; font-family:Arial,Helvetica,sans-serif; font-size:10.5px; line-height:1.3; padding:38px 44px 34px; position:relative; overflow:hidden}
+.paper .pinner{}
+.paper .ph{font-weight:bold; font-size:14px; line-height:1.25}
+.paper .rule{border-bottom:1.5px solid #000; margin:6px 0 9px}
+.paper .pt{font-weight:bold; font-size:12px; margin:0 0 7px}
+.paper .fields{display:flex; flex-wrap:wrap; font-size:10.5px; margin:0 0 9px}
+.paper .fields div{width:50%; padding:1px 0}
+.paper .blk{margin-bottom:0}
+.paper table{border-collapse:collapse; width:100%; font-size:10.5px; table-layout:fixed}
+.paper th, .paper td{border:1px solid #000; padding:3px 4px; vertical-align:middle; word-wrap:break-word; color:#000; background:#fff; border-radius:0; overflow:visible}
+.paper th{background:#cfcfcf; font-weight:bold; text-align:center; font-size:9.5px; line-height:1.2}
+.paper table thead{display:none}
+.paper table.first thead{display:table-header-group}
+.paper td.iu{font-weight:bold; text-align:center; font-size:9.5px; line-height:1.2}
+.paper .ph, .paper .pt, .paper .fields, .paper .omit, .paper .sigs{color:#000}
+.paper td.no{text-align:center}
+.paper td.el{line-height:1.2}
+.paper td.rmk{font-size:9px; line-height:1.2}
+.paper .nums{display:flex; justify-content:space-between; padding:0 1px}
+.paper .nums span{display:inline-block; width:18px; height:18px; line-height:16px; text-align:center; border-radius:50%; border:1.6px solid transparent; font-size:10px}
+.paper .nums span.sel{border-color:#000}
+.paper .na{text-align:center; font-weight:bold}
+.paper td.scorelbl{font-weight:bold; text-align:right; padding-right:8px}
+.paper td.scoreval{text-align:center; font-weight:bold; font-size:11px}
+.paper .omit{font-size:9px; font-style:italic; margin:3px 0 9px}
+.paper table.dt{margin-top:2px}
+.paper table.dt td{font-size:9.5px; line-height:1.2}
+.paper table.dt td.r{text-align:center; font-weight:bold}
+.paper .sigs{display:flex; gap:48px; margin-top:16px}
+.paper .sig{flex:1; min-width:0}
+.paper .sig .lbl{font-size:10px; margin-bottom:2px}
+.paper .sig .box{height:58px; display:flex; align-items:flex-end}
+.paper .sig .box img{display:block; height:56px; width:auto; max-width:100%}
+.paper .sigline{border-top:1px solid #000; padding-top:3px; font-size:9.5px; line-height:1.25}
+.paper .signame{font-size:9.5px; margin-top:3px}
+.paper .pgfoot{position:absolute; left:44px; right:44px; bottom:14px; display:flex; justify-content:space-between; font-size:8.5px; color:#555}
+.paper td .ref{font-weight:bold; white-space:nowrap}
+.paper .apx-title{font-weight:bold; font-size:12px; margin:0 0 4px; color:#000}
+.paper .apx-note{font-size:9.5px; margin:0 0 10px; color:#000}
+.paper .prow{display:flex; gap:16px; margin-bottom:14px}
+.paper .pcard{width:345px; border:1px solid #000; padding:6px; background:#fff}
+.paper .pcard .pimg{width:100%; height:228px; background:#f2f2f2; display:flex; align-items:center; justify-content:center; overflow:hidden}
+.paper .pcard img{max-width:100%; max-height:228px; display:block}
+.paper .pcap{font-size:9.5px; line-height:1.3; margin-top:5px; color:#000}
+.paper .pcap b{font-size:10.5px}
+
+.gate[hidden]{display:none}
+.gate{position:fixed; inset:0; z-index:50; background:var(--bg); display:flex; align-items:center; justify-content:center; padding:24px}
+.gate .box{max-width:420px; width:100%; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:24px 22px; display:flex; flex-direction:column; gap:12px}
+.gate h2{margin:0; font-size:20px}
+.gate p{margin:0; font-size:14px; color:var(--muted)}
+.gate input{font:inherit; font-size:18px; letter-spacing:.12em; text-transform:uppercase; padding:10px 12px; border:1px solid var(--line); border-radius:9px; background:var(--bg); color:var(--ink)}
+.gate .err{color:var(--s-bad); font-weight:700; min-height:18px; font-size:13px}
+.restricted{background:var(--warn-bg); color:var(--warn-ink); border-radius:9px; padding:8px 12px; font-size:12.5px; font-weight:600; margin-top:12px}
+@media (prefers-reduced-motion:reduce){ *{transition:none !important} }
+@media (max-width:480px){
+  .masthead h1{font-size:22px}
+  .chip{min-width:31px; height:35px}
+}
+</style>
+
+<div class="gate" id="gate" hidden>
+  <form class="box" id="gate-form">
+    <h2>ECC Audit G8/5 — restricted preview</h2>
+    <p>This digital form is in pilot for the CBRE Zone 9 / S&amp;W 1 team. Enter the access code given by the FME to continue.</p>
+    <input id="gate-code" type="text" autocomplete="off" placeholder="Access code" aria-label="Access code">
+    <div class="err" id="gate-err"></div>
+    <button class="btn primary" type="submit">Open the form</button>
+    <p>Developed by Muhammad 'Irfan Bin Ahmad Nazif, FME · for CBRE GWS internal use</p>
+  </form>
+</div>
+<div class="wrap">
+  <header class="masthead">
+    <p class="eyebrow">MOE IFM · Zone 9 / S&amp;W 1 · Contract Annex G8/5</p>
+    <h1>Environmental Quality Audit</h1>
+    <p>Digital copy of the hardcopy ECC audit. Tap a score per element, N/A to omit, sign on screen, then generate the finished pages, which look and file exactly like the paper one.</p>
+    <div class="restricted">Pilot version · restricted to the CBRE Zone 9 / S&amp;W 1 team · not yet an official MOE record</div>
+  </header>
+
+  <section class="card" id="setup">
+    <p class="step">Step 1 · Header</p>
+    <h2>Audit header</h2>
+    <p class="hint">Same fields as the top of the hardcopy, plus the school for the filename.</p>
+    <div class="grid2">
+      <label class="field">School / Site
+        <select id="f-school">
+          <optgroup label="Cluster 9-1">
+          <option value="APS">Alexandra Primary School</option>
+          <option value="ACSP">Anglo-Chinese School (Primary)</option>
+          <option value="ACSBR">Anglo-Chinese School (Barker Road)</option>
+          <option value="QSS">Queensway Secondary School</option>
+          </optgroup>
+          <optgroup label="Cluster 9-2">
+          <option value="SCGPS">Singapore Chinese Girls' Primary School</option>
+          <option value="SCGS">Singapore Chinese Girls' School (Independent)</option>
+          <option value="RMPS">Radin Mas Primary School</option>
+          <option value="BMSS">Bukit Merah Secondary School</option>
+          <option value="NJC">National Junior College</option>
+          </optgroup>
+          <optgroup label="Cluster 9-3">
+          <option value="RGPS">Raffles Girls' Primary School</option>
+          <option value="CJC">Catholic Junior College</option>
+          <option value="SMSS">St. Margaret's School (Secondary)</option>
+          <option value="NYPS">Nanyang Primary School</option>
+          <option value="CHIJK">CHIJ (Kellock)</option>
+          </optgroup>
+          <optgroup label="Cluster 9-4">
+          <option value="RVPS">River Valley Primary School</option>
+          <option value="GESPS">Gan Eng Seng Primary School</option>
+          <option value="GESS">Gan Eng Seng School</option>
+          <option value="NTPS">New Town Primary School</option>
+          <option value="BRPS">Blangah Rise Primary School</option>
+          <option value="LOALC">Labrador Outdoor Adventure Learning Centre</option>
+          </optgroup>
+          <optgroup label="Cluster 9-5">
+          <option value="QPS">Queenstown Primary School</option>
+          <option value="QTSS">Queenstown Secondary School</option>
+          <option value="CHIJST">CHIJ St. Theresa's Convent</option>
+          <option value="ZPS">Zhangde Primary School</option>
+          <option value="CGS">Crescent Girls' School</option>
+          </optgroup>
+          <optgroup label="Other">
+          <option value="OSS">Outram Secondary School</option>
+          <option value="OTHER">Other…</option>
+          </optgroup>
+        </select>
+      </label>
+      <label class="field" id="f-school-other-wrap" hidden>Other school name
+        <input id="f-school-other" type="text" placeholder="School name">
+      </label>
+      <label class="field">Audit / Inspection No
+        <input id="f-auditno" type="text" inputmode="numeric" placeholder="e.g. 6">
+      </label>
+      <label class="field">Date &amp; time of inspection
+        <input id="f-dt" type="datetime-local">
+      </label>
+      <label class="field">Time of last cleaning
+        <input id="f-lastclean" type="time">
+      </label>
+      <label class="field">Inspection by (Environmental Quality Auditor)
+        <input id="f-inspector" type="text" placeholder="e.g. Joseph Ong">
+      </label>
+      <label class="field">IFM Contractor rep (counter-signs)
+        <input id="f-ifmrep" type="text" placeholder="e.g. Muhammad Irfan (FME)">
+      </label>
+    </div>
+    <div class="part-toggles">
+      <label class="ptog"><input type="checkbox" id="tog-a" checked disabled>
+        <span><b>Part (a) — Cleaning Services for Schools</b><br><span class="sub">8 inspection units · always filled</span></span></label>
+      <label class="ptog"><input type="checkbox" id="tog-b">
+        <span><b>Part (b) — MOE Kindergarten Centres and Kindergarten Care Centres</b><br><span class="sub">6 units · tick only if the school has an MK / KCare on site (Alexandra Pri has one). Skip if none.</span></span></label>
+      <details class="more" id="more-parts">
+        <summary>Other site types in the annex (optional)</summary>
+        <div class="part-toggles">
+          <label class="ptog"><input type="checkbox" id="tog-c">
+            <span><b>Part (c) — Additional Cleaning Services</b><br><span class="sub">1 unit (Special Rooms) · only when instructed</span></span></label>
+          <label class="ptog"><input type="checkbox" id="tog-d">
+            <span><b>Part (d) — Hostels &amp; Boarding Schools</b><br><span class="sub">7 units · for schools with a hostel</span></span></label>
+          <label class="ptog"><input type="checkbox" id="tog-e">
+            <span><b>Part (e) — Outdoor Adventure Learning Centres</b><br><span class="sub">9 units · OALC sites only</span></span></label>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <p class="step-plain">Step 2 · Score every element</p>
+  <div id="parts-root"></div>
+
+  <details class="defs">
+    <summary>Ratings definitions (0–10) — same table as the hardcopy</summary>
+    <div class="defs-tbl-wrap">
+      <table class="defs-tbl">
+        <thead><tr><th>Rating</th><th>Description</th><th>Tolerance</th></tr></thead>
+        <tbody id="defs-body"></tbody>
+      </table>
+    </div>
+  </details>
+
+  <section class="card" id="sig-card">
+    <p class="step">Step 3 · Sign</p>
+    <h2>Inspected by</h2>
+    <p class="hint">Sign with finger or mouse. The same two signatures print on every part of this audit, exactly where the hardcopy signature blocks sit.</p>
+    <div class="sig-grid">
+      <div class="sig-box">
+        <span class="sig-title">Environmental Quality Auditor</span>
+        <span class="sig-sub">Signature &amp; date</span>
+        <div class="sig-canvas-wrap"><canvas id="sig-eqa"></canvas><span class="sig-ph" id="ph-eqa">Sign here</span></div>
+        <button class="sig-clear" id="clr-eqa" type="button">Clear signature</button>
+        <div class="grid2">
+          <label class="field">Name<input id="f-eqa-name" type="text" placeholder="e.g. Joseph Ong"></label>
+          <label class="field">Date<input id="f-eqa-date" type="date"></label>
+        </div>
+      </div>
+      <div class="sig-box">
+        <span class="sig-title">Integrated Facilities Management Contractor</span>
+        <span class="sig-sub">Signature &amp; date</span>
+        <div class="sig-canvas-wrap"><canvas id="sig-ifm"></canvas><span class="sig-ph" id="ph-ifm">Sign here</span></div>
+        <button class="sig-clear" id="clr-ifm" type="button">Clear signature</button>
+        <div class="grid2">
+          <label class="field">Name<input id="f-ifm-name" type="text" placeholder="e.g. Muhammad Irfan"></label>
+          <label class="field">Date<input id="f-ifm-date" type="date"></label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="finish-card">
+    <p class="step">Step 4 · Compile PDF &amp; file</p>
+    <h2>Finish</h2>
+    <div id="warn-slot"></div>
+    <p class="note"><b>Compile into one PDF</b> builds every ticked part (e.g. Cleaning + MK) as one file, laid out like the hardcopy: 0–10 row with the score circled, unit scores, total / max / overall %, definitions and both signature blocks. Filename follows the team's pattern, e.g. <b>APS - 30.9.2026 - Audit 6 - ECC G8-5.pdf</b>.</p>
+    <p class="note">Then file it: <b>SharePoint → Documents → General → ECC</b> (school and month folder), and send a copy to the ECC and the FME.</p>
+    <div class="pdf-actions">
+      <button class="btn primary" id="btn-pdf2" type="button">Compile into one PDF</button>
+      <button class="btn dl" id="btn-dl" type="button" hidden>Download PDF</button>
+      <button class="btn primary" id="btn-share" type="button" hidden>Share PDF (Outlook / WhatsApp / Files)</button>
+    </div>
+    <div id="pdf-msg"></div>
+    <div class="m365-block" id="sp-block" hidden aria-hidden="true">
+      <p class="dist-group">Save to SharePoint (your Microsoft 365 account)</p>
+      <p class="hint">Find your ECC folder once per school (e.g. "Irfan - APS"). It is remembered on this device. The compiled PDF is uploaded straight into that folder, so no download is needed.</p>
+      <div class="sp-row"><input id="sp-q" type="text" placeholder="Folder name, e.g. Irfan - APS"><button type="button" id="sp-find">Find folder</button></div>
+      <select id="sp-sel" hidden></select>
+      <div class="pdf-actions"><button class="btn dl" id="btn-sp" type="button">Save PDF to SharePoint</button></div>
+      <p class="note" id="sp-status"></p>
+    </div>
+  </section>
+
+  <section class="card" id="send-card">
+    <p class="step">Step 5 · Send</p>
+    <h2>Email the report</h2>
+    <p class="hint">Key the school OM and the MOE SCD once per school. They are kept on this device and come back the next time you pick that school. Nothing is sent from this page: the email is created as a draft in your own Outlook, or copied across, and you press Send there.</p>
+    <div class="grid2">
+      <label class="field">To · school OM (one address per line)
+        <textarea id="dist-to" rows="3" placeholder="om_name@schools.gov.sg"></textarea>
+      </label>
+      <label class="field">Cc · MOE SCD and others (one per line)
+        <textarea id="dist-cc" rows="3" placeholder="scd_name@moe.gov.sg"></textarea>
+      </label>
+    </div>
+    <p class="dist-group">Cc · CBRE</p>
+    <div id="dist-cbre"></div>
+    <div class="m365-block" id="draft-block" hidden style="border-top:0; margin-top:10px; padding-top:0">
+      <div class="pdf-actions"><button class="btn primary" id="btn-draft" type="button">Create draft in Outlook</button></div>
+      <p class="note" id="draft-status">Creates the email in your Outlook Drafts with the To, Cc, subject and text filled in, and a link to the PDF on SharePoint if it was saved there. You review and press Send in Outlook.</p>
+    </div>
+    <p class="dist-group">Or copy into Outlook yourself</p>
+    <div class="dist-actions">
+      <button class="btn ghost small" id="cp-to" type="button">Copy To</button>
+      <button class="btn ghost small" id="cp-cc" type="button">Copy Cc</button>
+      <button class="btn ghost small" id="cp-subj" type="button">Copy subject</button>
+      <button class="btn ghost small" id="cp-body" type="button">Copy email text</button>
+      <button class="btn ghost small" id="cp-all" type="button">Copy all (To, Cc, subject, text)</button>
+      <a class="btn ghost small" id="mailto-link" href="#">Open in mail app</a>
+    </div>
+    <p class="note" id="dist-note"></p>
+  </section>
+
+  <section class="card" id="pages-card" hidden>
+    <h2>Finished audit pages</h2>
+    <div class="savehow" id="savehow"></div>
+    <div class="pages-list" id="pages-list"></div>
+  </section>
+
+  <div class="footnote">
+    <p>All five parts of Annex G8/5 are available above. Sample-photo reference pages are in the master: SharePoint → Tender Doc (Original) → Volume 2 – Annexes.</p>
+    <p>Working tool for the CBRE Zone 9 team. Before making the digital copy the official record in place of wet-ink hardcopy, confirm acceptance with the FM and the school's SCD.</p>
+    <p>Photos: tap "Add photo" under any element's remark. Scores below 5 need one. Photos print on Appendix pages after the signatures and are referenced as "See P1" in the Remarks column, so the audit pages themselves stay unchanged.</p>
+    <p>Digital form developed by Muhammad 'Irfan Bin Ahmad Nazif, FME, CBRE GWS Zone 9 / S&amp;W 1, October 2026.</p>
+  </div>
+</div>
+
+<div class="bar">
+  <div class="bar-inner">
+    <div class="bar-scores" id="bar-scores"></div>
+    <span class="draft-dot" id="draft-dot"></span>
+    <button class="btn ghost" id="btn-reset" type="button">Reset</button>
+    <button class="btn primary" id="btn-pdf" type="button">Generate PDF</button>
+  </div>
+</div>
+
+<div id="paper-stage" aria-hidden="true"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+"use strict";
+
+/* ---------- Form definition — verbatim from Annex G8/5 (Vol 2 of 4) ---------- */
+const STD_ENTRANCE = ["Surfaces of door / frame / closer","Floor","Wall / partition / skirting","Ceiling",
+  "Glass / window / louvers and the like","Fitting / furniture","Switches / power points / signages",
+  "Fire hose reel / extinguisher","Plant boxes / containers / ornaments"];
+const STD_CORRIDOR = STD_ENTRANCE.concat(["Handrail"]);
+const STD_TOILETS = ["Surfaces of door / frame / closer","Floor","Wall / partition","Mirror",
+  "Sanitary fittings / fixtures / wash hand basin","Switches / power points / signages",
+  "Urinals, water closets, seat and flushing cistern",
+  "Toilet paper dispenser / soap holder / soap dispenser / air freshener","Hand dryer","Litter Bins",
+  "General Environment","Glass / window / louvers and the like"];
+const STD_LIFT = ["Floor, wall and door","Mirror","Ceiling and light diffusers"];
+const STD_EXTERNAL = ["Planter boxes and containers","Porches, pavement, compound, aprons, side walk","External game courts",
+  "Carpark, driveway, hardstanding, loading & unloading bay",
+  "Landscape area including fields, gardens, side tables and planter boxes","Drainage system",
+  "Bin Centre / Bin chute","Handrails","Rooftop"];
+const STD_SPECIAL = ["Surfaces of door / frame / closer","Floor","Wall / partition / skirting","Ceiling",
+  "Glass / window / louvers and the like","Fitting / furniture","Switches / power points / signages",
+  "Waste paper baskets","Carpets","Curtain rails & blinds"];
+const HOSTEL_ROOM = ["Surfaces of door / frame / closer","Floor","Wall / partition / skirting","Ceiling",
+  "Glass / window / louvers and the like","Fitting / furniture","Switches / power points / signages","Washing Machines"];
+const OALC_DORM = ["Surfaces of door / frame / closer","Floor","Wall / partition / skirting","Ceiling",
+  "Glass, window, louvers and the like","Fitting / furniture","Switches / power points / signages",
+  "Fire hose reel / extinguisher","Plant boxes / containers / ornaments","Carpets"];
+
+const PARTS = {
+  a: { code:"(a)", title:"CLEANING SERVICES FOR SCHOOLS", units:[
+    { name:"Entrance and lobby", items:STD_ENTRANCE },
+    { name:"Corridor Staircase/ Landing/ Steps / Common areas", items:STD_CORRIDOR },
+    { name:"Toilets", items:STD_TOILETS },
+    { name:"Lift Cars", items:STD_LIFT },
+    { name:"External Area", items:STD_EXTERNAL },
+    { name:"Canteen", items:["Surfaces of door / frame / closer","Floor","Wall / partition","Fitting / furniture","Litter Bins","General Environment"] },
+    { name:"Classroom", items:["Surfaces of door / frame / closer","Floor","Wall / partition / skirting","Ceiling",
+      "Glass / window / louvers and the like","Fitting / furniture","Switches / power points / signages",
+      "Litter Bins / Waste paper baskets","Curtain rails & blinds"] },
+    { name:"Special Rooms", items:STD_SPECIAL }
+  ]},
+  b: { code:"(b)", title:"MOE KINDERGARTEN CENTRES AND KINDERGARTEN CARE CENTRES", units:[
+    { name:"Teaching areas consist of MK classrooms, Music & Movement room, KCare Centres and etc.", items:[
+      "Floors and skirting","Walls, shelves and cupboard surface","Windows/ grills/ doors",
+      "Dustbins and waste paper baskets","Children's carpets","Counter tops and basins","Corridor carpets"] },
+    { name:"Toilets", items:["Surfaces of door / frame / closer","Floor","Wall / partition","Glass/ mirror",
+      "Sanitary fittings / fixtures / wash hand basin","Switches / power points / signages",
+      "Urinals, water closets, seat and flushing cistern","Toilet paper dispenser / soap holder / soap dispenser",
+      "Litter Bins","General Environment","Glass / window / louvers and the like"] },
+    { name:"Admin areas consist of MK Staff Rooms, Centre Principal Office and etc.", items:[
+      "Floors and skirting","Walls, shelves, cupboard and table surface, switches","Windows/ grills/ doors",
+      "Dustbins and waste paper baskets","Curtains and roller blinds","Top of high cabinets"] },
+    { name:"Lift Cars", items:["Floor, wall and door","Mirrors","Ceiling and light diffusers"] },
+    { name:"Corridor and Staircase/ Landing/ Steps/ Common areas", items:[
+      "Surfaces of door/ frame/ closer","Floor","Wall/ partition/ skirting","Ceiling",
+      "Glass/ window/ louvers and the like","Switches/ power points/ signages","Fire hose reel/ extinguisher","Handrails"] },
+    { name:"External Area", items:["Children's playground","Rooftop"] }
+  ]},
+  c: { code:"(c)", title:"ADDITIONAL CLEANING SERVICES", units:[
+    { name:"Special Rooms", items:STD_SPECIAL }
+  ]},
+  d: { code:"(d)", title:"HOSTELS & BOARDING SCHOOLS", units:[
+    { name:"Entrance and lobby", items:STD_ENTRANCE },
+    { name:"Corridor/ Staircase/ Landing/ Steps / Common areas", items:STD_CORRIDOR },
+    { name:"Toilets", items:STD_TOILETS },
+    { name:"Lift Cars", items:STD_LIFT },
+    { name:"Student's Room", items:HOSTEL_ROOM },
+    { name:"Hostel's Special Rooms", items:HOSTEL_ROOM },
+    { name:"External Area", items:["Planter boxes and containers","Porches, pavement, compound, aprons, side walk","External game courts",
+      "Carpark, driveway, hardstanding, loading & unloading bay",
+      "Landscape area including fields, gardens, side tables and planter boxes",
+      "Landscape area including fields, gardens, side tables and planter boxes",
+      "Drainage system","Bin Centre / Bin chute","Handrails","Rooftop"] }
+  ]},
+  e: { code:"(e)", title:"OUTDOOR ADVENTURE LEARNING CENTRES", units:[
+    { name:"Entrance and lobby", items:STD_ENTRANCE },
+    { name:"Corridor Staircase/ Landing/ Steps / Common areas", items:STD_CORRIDOR },
+    { name:"Toilets", items:STD_TOILETS },
+    { name:"Dining Hall", items:["Floors","Wall / partition / ceiling / skirting","Fire hose reel / extinguisher","Rubbish Bin"] },
+    { name:"Staff Room (Note: vents, windows, louvers, doors, ceiling, diffusers and fire-fighting equipment are under External Cleaning)", items:[
+      "Surfaces of door / frame / closer","Floor","Wall / partition / skirting","Ceiling","Glass, window, louvers and the like",
+      "Fitting / furniture","Switches / power points / signages","Fire hose reel / extinguisher",
+      "Plant boxes / containers / ornaments","Telephones","Carpets"] },
+    { name:"Sickbay Cleaning (Note: vents, windows, louvers, doors, ceiling, diffusers and fire-fighting equipment are under External Cleaning)", items:[
+      "Surfaces of door / frame / closer","Floor","Wall / partition / skirting","Ceiling","Glass, window, louvers and the like",
+      "Fitting / furniture","Switches / power points / signages"] },
+    { name:"Staff Dormitories", items:OALC_DORM },
+    { name:"Student Dormitories", items:OALC_DORM },
+    { name:"External Area", items:STD_EXTERNAL }
+  ]}
+};
+const PART_KEYS = ["a","b","c","d","e"];
+
+const DEFS = [
+  ["10","Presence of light dust and rough dust","Area covered not exceeding 10% of total space"],
+  ["9","Presence of light dust and rough dust","Area covered exceeding 10% of total space but not exceeding 20% of total space"],
+  ["8","Presence of light dust and rough dust","Area covered exceeding 20% of total space but not exceeding 50% of total space"],
+  ["7","Presence of smears/stains finger marks","Area covered not exceeding 10% of total space"],
+  ["6","Presence of smears/stains finger marks","Area covered exceeding 10% of total space but not exceeding 20% of total space"],
+  ["5","Presence of smears/stains finger marks","Area covered exceeding 20% of total space but not exceeding 50% of total space"],
+  ["4","Presence of heavy dust and dust flocks","Area covered not exceeding 10% of total space"],
+  ["3","Presence of heavy dust and dust flocks","Area covered exceeding 10% of total space but not exceeding 20% of total space"],
+  ["2","Presence of heavy dust and dust flocks","Area covered exceeding 20% of total space but not exceeding 50% of total space"],
+  ["1","Presence of sediment and sticky dirt","Area not exceeding 50% of total space"],
+  ["0","Presence of light dust and rough dust / Presence of smears/stains finger marks / Presence of heavy dust and dust flocks / Presence of sediment and sticky dirt","Area covered exceeding 50% of total space"]
+];
+
+const SCHOOL_NAMES = { APS:"Alexandra Primary School", ACSP:"Anglo-Chinese School (Primary)", ACSBR:"Anglo-Chinese School (Barker Road)", QSS:"Queensway Secondary School",
+  SCGPS:"Singapore Chinese Girls' Primary School", SCGS:"Singapore Chinese Girls' School (Independent)", RMPS:"Radin Mas Primary School", BMSS:"Bukit Merah Secondary School", NJC:"National Junior College",
+  RGPS:"Raffles Girls' Primary School", CJC:"Catholic Junior College", SMSS:"St. Margaret's School (Secondary)", NYPS:"Nanyang Primary School", CHIJK:"CHIJ (Kellock)",
+  RVPS:"River Valley Primary School", GESPS:"Gan Eng Seng Primary School", GESS:"Gan Eng Seng School", NTPS:"New Town Primary School", BRPS:"Blangah Rise Primary School", LOALC:"Labrador Outdoor Adventure Learning Centre",
+  QPS:"Queenstown Primary School", QTSS:"Queenstown Secondary School", CHIJST:"CHIJ St. Theresa's Convent", ZPS:"Zhangde Primary School", CGS:"Crescent Girls' School", OSS:"Outram Secondary School" };
+/* CBRE copy list — from the ECC email thread. Everything else is keyed per school by the user and kept on the device only. */
+const CBRE_CC = [
+  {n:"Joseph Ong (ECC Team Lead)", e:"Joseph.Ong@cbre.com", on:true},
+  {n:"Irfan Ahmad Nazif (FME)", e:"Irfan.AhmadNazif@cbre.com", on:true}
+];
+
+/* ---------- State ---------- */
+function blankScores(part){ return PARTS[part].units.map(u => u.items.map(() => null)); }
+function blankRemarks(part){ return PARTS[part].units.map(u => u.items.map(() => "")); }
+function blankPhotos(part){ return PARTS[part].units.map(u => u.items.map(() => [])); }
+function blankAll(fn){ const o={}; PART_KEYS.forEach(p=>o[p]=fn(p)); return o; }
+const PHOTO_MAX = 4;
+const PHOTO_BELOW = 5;
+
+let state = {
+  meta: { school:"APS", schoolOther:"", auditNo:"", dt:"", lastClean:"", inspector:"", ifmRep:"" },
+  on: { a:true, b:false, c:false, d:false, e:false },
+  scores: blankAll(blankScores),
+  remarks: blankAll(blankRemarks),
+  photos: blankAll(blankPhotos),
+  sigs: { eqa:{strokes:[], name:"", date:""}, ifm:{strokes:[], name:"", date:""} }
+};
+
+const LS_KEY = "ecc-g85-draft-v2";
+let saveTimer = null;
+function persist(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(state)); setDraftDot("Draft saved on this device"); }
+    catch(e){
+      try {
+        const slim = Object.assign({}, state, { photos: blankAll(blankPhotos) });
+        localStorage.setItem(LS_KEY, JSON.stringify(slim));
+        setDraftDot("Draft saved (photos too large to keep in the draft)");
+      } catch(_){ setDraftDot(""); }
+    }
+  }, 400);
+}
+let hadDraft=false;
+function restore(){
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return;
+    const s = JSON.parse(raw);
+    if (!s || !s.scores || !s.scores.a) return;
+    hadDraft=true;
+    for (const p of PART_KEYS){
+      const fresh = blankScores(p), freshR = blankRemarks(p);
+      (s.scores[p]||[]).forEach((u,ui)=>{ if(fresh[ui]) u.forEach((v,ii)=>{ if(ii<fresh[ui].length) fresh[ui][ii]=v; }); });
+      (s.remarks&&s.remarks[p]||[]).forEach((u,ui)=>{ if(freshR[ui]) u.forEach((v,ii)=>{ if(ii<freshR[ui].length) freshR[ui][ii]=v||""; }); });
+      const freshP = blankPhotos(p);
+      (s.photos&&s.photos[p]||[]).forEach((u,ui)=>{ if(freshP[ui]) u.forEach((v,ii)=>{ if(ii<freshP[ui].length && Array.isArray(v)) freshP[ui][ii]=v.filter(x=>typeof x==="string").slice(0,PHOTO_MAX); }); });
+      state.scores[p]=fresh; state.remarks[p]=freshR; state.photos[p]=freshP;
+    }
+    state.meta = Object.assign(state.meta, s.meta||{});
+    state.on = Object.assign(state.on, s.on||{}, {a:true});
+    if (s.sigs){ for (const k of ["eqa","ifm"]) if (s.sigs[k]) state.sigs[k] = Object.assign(state.sigs[k], s.sigs[k]); }
+  } catch(e){ /* storage unavailable — start fresh */ }
+}
+function setDraftDot(t){ document.getElementById("draft-dot").textContent = t; }
+
+/* ---------- Scoring ---------- */
+function unitCalc(part, ui){
+  let sum=0, counted=0, left=0;
+  state.scores[part][ui].forEach(v => { if (typeof v === "number"){ sum+=v; counted++; } else if (v===null) left++; });
+  return { sum, max: counted*10, counted, left, total: state.scores[part][ui].length };
+}
+function partCalc(part){
+  let sum=0, max=0, unscored=[];
+  PARTS[part].units.forEach((u,ui)=>{
+    const c = unitCalc(part,ui);
+    sum+=c.sum; max+=c.max;
+    u.items.forEach((_,ii)=>{ if (state.scores[part][ui][ii]===null) unscored.push({ui,ii}); });
+  });
+  const pct = max>0 ? (sum/max*100) : null;
+  return { sum, max, pct, unscored };
+}
+function fmtPct(p){ return p===null ? "—" : (Math.round(p*10)/10).toFixed(1).replace(/\.0$/,"") + "%"; }
+function activeParts(){ return PART_KEYS.filter(p=>state.on[p]); }
+
+/* ---------- Render ---------- */
+const root = document.getElementById("parts-root");
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function chipClass(v){
+  if (v==="NA") return "sel-na";
+  if (typeof v!=="number") return "";
+  if (v>=8) return "sel-good";
+  if (v>=5) return "sel-mid";
+  if (v>=2) return "sel-low";
+  return "sel-bad";
+}
+function renderParts(){
+  root.innerHTML = "";
+  root.style.display="flex"; root.style.flexDirection="column"; root.style.gap="16px";
+  for (const p of activeParts()){
+    const part = PARTS[p];
+    const head = document.createElement("div");
+    head.className="part-head";
+    head.innerHTML = `<h2>Part ${part.code} — ${esc(part.title)}</h2><span class="pcode" id="phead-${p}"></span>`;
+    root.appendChild(head);
+    part.units.forEach((u,ui)=>{
+      const card = document.createElement("section");
+      card.className="unit"; card.id=`unit-${p}-${ui}`;
+      const rows = u.items.map((it,ii)=>{
+        const v = state.scores[p][ui][ii];
+        const rmk = state.remarks[p][ui][ii];
+        const chips = [];
+        for (let s=0;s<=10;s++){
+          chips.push(`<button type="button" class="chip ${v===s?chipClass(s):""}" data-p="${p}" data-u="${ui}" data-i="${ii}" data-v="${s}">${s}</button>`);
+        }
+        chips.push(`<button type="button" class="chip ${v==="NA"?"sel-na":""}" data-p="${p}" data-u="${ui}" data-i="${ii}" data-v="NA">N/A</button>`);
+        const ph = state.photos[p][ui][ii];
+        const need = needsPhoto(p,ui,ii);
+        const open = !!rmk || ph.length>0 || need;
+        return `<div class="row">
+          <div class="row-top">
+            <span class="rno">${ii+1}</span>
+            <span class="rlabel">${esc(it)}</span>
+            <button type="button" class="rmk-btn ${(rmk||ph.length)?"has":""}" data-rmk="${p}-${ui}-${ii}">${rmkLabel(p,ui,ii)}</button>
+          </div>
+          <div class="chips">${chips.join("")}</div>
+          <div class="rmk-wrap" id="rmkw-${p}-${ui}-${ii}" ${open?"":"hidden"}>
+            <input type="text" id="rmki-${p}-${ui}-${ii}" placeholder="Area checked / observations / remarks" value="${esc(rmk)}">
+            <div class="photo-row">
+              <button type="button" class="photo-add ${need?"need":""}" data-photo="${p}-${ui}-${ii}">📷 Add photo</button>
+              <span class="photo-hint ${need?"need":""}" id="phh-${p}-${ui}-${ii}">${need?"Photo required for a score below "+PHOTO_BELOW:"Optional · goes to the Appendix"}</span>
+              <input type="file" accept="image/*" multiple hidden id="pf-${p}-${ui}-${ii}">
+            </div>
+            <div class="thumbs" id="th-${p}-${ui}-${ii}">${thumbsHtml(p,ui,ii)}</div>
+          </div>
+        </div>`;
+      }).join("");
+      card.innerHTML = `
+        <button type="button" class="unit-head" data-toggle="${p}-${ui}">
+          <span class="num">${ui+1}</span>
+          <span class="uname">${esc(u.name)}</span>
+          <span class="uscore" id="usc-${p}-${ui}"></span>
+          <span class="caret">▾</span>
+        </button>
+        <div class="unit-body">
+          <div class="fill-rest">
+            <span>Fill remaining in this unit with</span>
+            <select id="fr-${p}-${ui}">${[10,9,8,7,6,5,4,3,2,1,0].map(n=>`<option ${n===7?"selected":""}>${n}</option>`).join("")}</select>
+            <button type="button" data-fillrest="${p}-${ui}">Apply</button>
+          </div>
+          ${rows}
+          <div class="unit-score-row"><span>Overall Score (${ui+1}):</span><b id="uscb-${p}-${ui}"></b></div>
+        </div>`;
+      root.appendChild(card);
+    });
+  }
+  refreshScores();
+}
+function refreshScores(){
+  for (const p of activeParts()){
+    PARTS[p].units.forEach((u,ui)=>{
+      const c = unitCalc(p,ui);
+      const txt = c.counted ? `${c.sum} / ${c.max}` : "— / —";
+      const el1 = document.getElementById(`usc-${p}-${ui}`);
+      const el2 = document.getElementById(`uscb-${p}-${ui}`);
+      if (el1) el1.textContent = txt + (c.left ? ` · ${c.left} left` : "");
+      if (el2) el2.textContent = txt;
+    });
+    const pc = partCalc(p);
+    const ph = document.getElementById(`phead-${p}`);
+    if (ph) ph.textContent = `Total ${pc.sum} / ${pc.max} · ${fmtPct(pc.pct)}`;
+  }
+  const bar = document.getElementById("bar-scores");
+  let leftTotal = 0;
+  bar.innerHTML = activeParts().map(p=>{
+    const pc = partCalc(p);
+    leftTotal += pc.unscored.length;
+    return `<span class="bsc">Part ${PARTS[p].code}<b>${pc.sum} / ${pc.max} · ${fmtPct(pc.pct)}</b></span>`;
+  }).join("");
+  bar.innerHTML += leftTotal
+    ? `<span class="bsc">Progress<b>${leftTotal} item${leftTotal>1?"s":""} left</b></span>`
+    : `<span class="bsc">Progress<b style="color:var(--s-good)">All scored ✓</b></span>`;
+}
+function needsPhoto(p,ui,ii){
+  const v = state.scores[p][ui][ii];
+  return typeof v==="number" && v<PHOTO_BELOW && state.photos[p][ui][ii].length===0;
+}
+function rmkLabel(p,ui,ii){
+  const parts=[];
+  if (state.remarks[p][ui][ii]) parts.push("✎ remark");
+  const n=state.photos[p][ui][ii].length;
+  if (n) parts.push(`📷 ${n}`);
+  return parts.length ? parts.join(" · ") : "✎";
+}
+function thumbsHtml(p,ui,ii){
+  return state.photos[p][ui][ii].map((src,k)=>
+    `<div class="thumb"><img src="${src}" alt="Photo ${k+1}"><button type="button" class="thumb-del" data-delphoto="${p}-${ui}-${ii}-${k}" aria-label="Remove photo">×</button></div>`
+  ).join("");
+}
+function refreshPhotoRow(p,ui,ii){
+  const th=document.getElementById(`th-${p}-${ui}-${ii}`);
+  if (th) th.innerHTML=thumbsHtml(p,ui,ii);
+  const need=needsPhoto(p,ui,ii);
+  const hint=document.getElementById(`phh-${p}-${ui}-${ii}`);
+  if (hint){ hint.textContent = need ? `Photo required for a score below ${PHOTO_BELOW}` : "Optional · goes to the Appendix"; hint.classList.toggle("need",need); }
+  const addBtn=root.querySelector(`[data-photo="${p}-${ui}-${ii}"]`);
+  if (addBtn) addBtn.classList.toggle("need",need);
+  const btn=root.querySelector(`[data-rmk="${p}-${ui}-${ii}"]`);
+  if (btn){ btn.textContent=rmkLabel(p,ui,ii); btn.classList.toggle("has", !!state.remarks[p][ui][ii] || state.photos[p][ui][ii].length>0); }
+  if (need){ const w=document.getElementById(`rmkw-${p}-${ui}-${ii}`); if (w) w.hidden=false; }
+}
+function fileToJpeg(file, max=1000, q=0.72){
+  return new Promise((res,rej)=>{
+    const fr=new FileReader();
+    fr.onload=()=>{
+      const img=new Image();
+      img.onload=()=>{
+        let w=img.width, h=img.height;
+        const s=Math.min(1, max/Math.max(w,h));
+        w=Math.max(1,Math.round(w*s)); h=Math.max(1,Math.round(h*s));
+        const c=document.createElement("canvas"); c.width=w; c.height=h;
+        c.getContext("2d").drawImage(img,0,0,w,h);
+        res(c.toDataURL("image/jpeg",q));
+      };
+      img.onerror=()=>rej(new Error("not an image"));
+      img.src=fr.result;
+    };
+    fr.onerror=()=>rej(new Error("could not read file"));
+    fr.readAsDataURL(file);
+  });
+}
+function renderDefs(){
+  document.getElementById("defs-body").innerHTML =
+    DEFS.map(d=>`<tr><td>${d[0]}</td><td>${esc(d[1])}</td><td>${esc(d[2])}</td></tr>`).join("");
+}
+
+/* ---------- Events ---------- */
+root.addEventListener("click", e=>{
+  const chip = e.target.closest(".chip");
+  if (chip){
+    const p=chip.dataset.p, u=+chip.dataset.u, i=+chip.dataset.i;
+    const v = chip.dataset.v==="NA" ? "NA" : +chip.dataset.v;
+    state.scores[p][u][i] = (state.scores[p][u][i]===v) ? null : v;
+    const wrap = chip.parentElement;
+    wrap.querySelectorAll(".chip").forEach(c=>{ c.className="chip"; });
+    const nv = state.scores[p][u][i];
+    if (nv!==null){
+      const seln = [...wrap.querySelectorAll(".chip")].find(c=> (c.dataset.v==="NA"?"NA":+c.dataset.v)===nv);
+      if (seln) seln.className = "chip "+(nv==="NA"?"sel-na":chipClass(nv));
+    }
+    refreshPhotoRow(p,u,i);
+    refreshScores(); persist(); return;
+  }
+  const pa = e.target.closest("[data-photo]");
+  if (pa){
+    const [p,u,i] = pa.dataset.photo.split("-");
+    if (state.photos[p][+u][+i].length>=PHOTO_MAX){ pdfMsg.innerHTML=""; pa.textContent=`Max ${PHOTO_MAX} photos`; setTimeout(()=>pa.textContent="📷 Add photo",1800); return; }
+    document.getElementById(`pf-${p}-${u}-${i}`).click();
+    return;
+  }
+  const dp = e.target.closest("[data-delphoto]");
+  if (dp){
+    const [p,u,i,k] = dp.dataset.delphoto.split("-");
+    state.photos[p][+u][+i].splice(+k,1);
+    refreshPhotoRow(p,+u,+i); persist(); return;
+  }
+  const tg = e.target.closest("[data-toggle]");
+  if (tg){ document.getElementById("unit-"+tg.dataset.toggle).classList.toggle("closed"); return; }
+  const rb = e.target.closest("[data-rmk]");
+  if (rb){
+    const w = document.getElementById("rmkw-"+rb.dataset.rmk);
+    w.hidden = !w.hidden;
+    if (!w.hidden) w.querySelector("input").focus();
+    return;
+  }
+  const fr = e.target.closest("[data-fillrest]");
+  if (fr){
+    const [p,uiS] = fr.dataset.fillrest.split("-"); const ui=+uiS;
+    const val = +document.getElementById(`fr-${p}-${ui}`).value;
+    state.scores[p][ui] = state.scores[p][ui].map(v => v===null ? val : v);
+    renderParts(); persist(); return;
+  }
+});
+root.addEventListener("input", e=>{
+  const inp = e.target.closest("input[id^='rmki-']");
+  if (inp){
+    const [,p,u,i] = inp.id.split("-");
+    state.remarks[p][+u][+i] = inp.value;
+    refreshPhotoRow(p,+u,+i);
+    persist();
+  }
+});
+root.addEventListener("change", async e=>{
+  const fi = e.target.closest("input[type=file][id^='pf-']");
+  if (!fi) return;
+  const [,p,u,i] = fi.id.split("-");
+  const list = state.photos[p][+u][+i];
+  const files = [...(fi.files||[])];
+  fi.value = "";
+  for (const f of files){
+    if (list.length>=PHOTO_MAX) break;
+    try { list.push(await fileToJpeg(f)); } catch(_){ /* skip files that are not images */ }
+  }
+  refreshPhotoRow(p,+u,+i); persist();
+});
+
+function bindMeta(id, key){
+  const el = document.getElementById(id);
+  el.addEventListener("input", ()=>{ state.meta[key]=el.value; persist(); });
+}
+bindMeta("f-auditno","auditNo"); bindMeta("f-dt","dt"); bindMeta("f-lastclean","lastClean");
+bindMeta("f-inspector","inspector"); bindMeta("f-ifmrep","ifmRep"); bindMeta("f-school-other","schoolOther");
+document.getElementById("f-school").addEventListener("change", e=>{
+  state.meta.school = e.target.value;
+  document.getElementById("f-school-other-wrap").hidden = state.meta.school!=="OTHER";
+  if (state.meta.school==="APS" && !state.on.b){
+    state.on.b = true; document.getElementById("tog-b").checked = true; renderParts();
+  }
+  persist();
+});
+for (const p of ["b","c","d","e"]){
+  document.getElementById("tog-"+p).addEventListener("change", e=>{
+    state.on[p]=e.target.checked; renderParts(); persist();
+  });
+}
+["eqa","ifm"].forEach(k=>{
+  document.getElementById(`f-${k}-name`).addEventListener("input", e=>{ state.sigs[k].name=e.target.value; persist(); });
+  document.getElementById(`f-${k}-date`).addEventListener("input", e=>{ state.sigs[k].date=e.target.value; persist(); });
+});
+
+/* ---------- Signature pads ---------- */
+function makePad(key){
+  const canvas = document.getElementById("sig-"+key);
+  const ph = document.getElementById("ph-"+key);
+  const ctx = canvas.getContext("2d");
+  let drawing=false, stroke=null;
+  function cssSize(){ return { w: canvas.clientWidth||300, h: canvas.clientHeight||140 }; }
+  function fit(){
+    const {w,h}=cssSize(), dpr=window.devicePixelRatio||1;
+    canvas.width=Math.round(w*dpr); canvas.height=Math.round(h*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0); redraw();
+  }
+  function inkColor(){ return getComputedStyle(document.body).color; }
+  function redraw(){
+    const {w,h}=cssSize();
+    ctx.clearRect(0,0,w,h);
+    ctx.strokeStyle=inkColor(); ctx.lineWidth=2; ctx.lineCap="round"; ctx.lineJoin="round";
+    for (const s of state.sigs[key].strokes){
+      ctx.beginPath();
+      s.forEach((pt,i)=>{ const x=pt[0]*w, y=pt[1]*h; i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+      ctx.stroke();
+    }
+    ph.hidden = state.sigs[key].strokes.length>0;
+  }
+  function pos(ev){
+    const r=canvas.getBoundingClientRect();
+    return [ (ev.clientX-r.left)/r.width, (ev.clientY-r.top)/r.height ];
+  }
+  canvas.addEventListener("pointerdown", ev=>{
+    ev.preventDefault();
+    drawing=true; stroke=[pos(ev)]; state.sigs[key].strokes.push(stroke); redraw();
+    try{ canvas.setPointerCapture(ev.pointerId); }catch(_){}
+  });
+  canvas.addEventListener("pointermove", ev=>{ if(!drawing) return; ev.preventDefault(); stroke.push(pos(ev)); redraw(); });
+  const end = ()=>{ if(drawing){ drawing=false; if (stroke && stroke.length<2) stroke.push(stroke[0]); stroke=null; persist(); } };
+  canvas.addEventListener("pointerup", end);
+  canvas.addEventListener("pointercancel", end);
+  canvas.addEventListener("pointerleave", end);
+  document.getElementById("clr-"+key).addEventListener("click", ()=>{ state.sigs[key].strokes=[]; redraw(); persist(); });
+  window.addEventListener("resize", fit);
+  fit();
+  return { redraw, fit };
+}
+function sigToPng(key){
+  if (!state.sigs[key].strokes.length) return null;
+  const w=560, h=190, c=document.createElement("canvas");
+  c.width=w; c.height=h;
+  const x=c.getContext("2d");
+  x.fillStyle="#ffffff"; x.fillRect(0,0,w,h);
+  x.strokeStyle="#111111"; x.lineWidth=3; x.lineCap="round"; x.lineJoin="round";
+  for (const s of state.sigs[key].strokes){
+    x.beginPath();
+    s.forEach((pt,i)=>{ const px=pt[0]*w, py=pt[1]*h; i?x.lineTo(px,py):x.moveTo(px,py); });
+    x.stroke();
+  }
+  return c.toDataURL("image/png");
+}
+
+/* ---------- Paper pages (A4, hardcopy layout) ---------- */
+function schoolName(){
+  return state.meta.school==="OTHER" ? (state.meta.schoolOther||"School") : SCHOOL_NAMES[state.meta.school];
+}
+function schoolShort(){
+  if (state.meta.school==="OTHER"){
+    const n=(state.meta.schoolOther||"School").trim();
+    return n.split(/\s+/).map(w=>w[0]).join("").toUpperCase().slice(0,5)||"SCH";
+  }
+  return state.meta.school;
+}
+function fmtDT(v){
+  if (!v) return "";
+  const d=new Date(v);
+  if (isNaN(d)) return v;
+  const pad=n=>String(n).padStart(2,"0");
+  return `${d.getDate()}/${d.getMonth()+1}/${String(d.getFullYear()).slice(2)}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function fmtD(v){
+  if (!v) return "";
+  const d=new Date(v+"T00:00");
+  if (isNaN(d)) return v;
+  return `${d.getDate()}/${d.getMonth()+1}/${String(d.getFullYear()).slice(2)}`;
+}
+function baseFilename(){
+  const d = state.meta.dt ? new Date(state.meta.dt) : new Date();
+  const ds = `${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}`;
+  const no = state.meta.auditNo ? ` - Audit ${state.meta.auditNo}` : "";
+  return `${schoolShort()} - ${ds}${no} - ECC G8-5`;
+}
+
+const PAGE_INNER_H = 1123 - 38 - 34 - 18;
+const TABLE_HEAD = `<colgroup><col style="width:88px"><col style="width:24px"><col><col style="width:232px"><col style="width:118px"></colgroup><thead><tr><th>Inspection Units</th><th>No</th><th>Elements#</th><th>Rating – Circle the Score</th><th>Area Checked/ Observations/ Remarks</th></tr></thead>`;
+
+function buildPaperPages(){
+  const stage=document.getElementById("paper-stage");
+  stage.innerHTML="";
+  const pages=[];
+  let page=null, inner=null, tablesOnPage=0;
+  const headerHtml = `<div class="ph">ANNEX G8/5<br>ENVIRONMENTAL QUALITY AUDIT FORM</div><div class="rule"></div>`;
+  function newPage(){
+    page=document.createElement("div"); page.className="paper";
+    inner=document.createElement("div"); inner.className="pinner";
+    inner.innerHTML=headerHtml;
+    page.appendChild(inner);
+    const f=document.createElement("div"); f.className="pgfoot"; page.appendChild(f);
+    stage.appendChild(page); pages.push(page); tablesOnPage=0;
+  }
+  function place(html, isTable){
+    const el=document.createElement("div"); el.className="blk"; el.innerHTML=html;
+    const tbl = isTable ? el.querySelector("table") : null;
+    inner.appendChild(el);
+    if (tbl && tablesOnPage===0) tbl.classList.add("first");
+    if (inner.offsetHeight > PAGE_INNER_H && inner.querySelectorAll(".blk").length>1){
+      el.remove(); newPage(); inner.appendChild(el);
+      if (tbl) tbl.classList.add("first");
+    }
+    if (isTable) tablesOnPage++;
+  }
+  function numsHtml(v){
+    if (v==="NA") return `<div class="na">N/A</div>`;
+    let s=`<div class="nums">`;
+    for (let k=0;k<=10;k++) s+=`<span class="${v===k?"sel":""}">${k}</span>`;
+    return s+`</div>`;
+  }
+  const png1=sigToPng("eqa"), png2=sigToPng("ifm");
+  const nm1=[state.sigs.eqa.name, fmtD(state.sigs.eqa.date)].filter(Boolean).join("   ");
+  const nm2=[state.sigs.ifm.name, fmtD(state.sigs.ifm.date)].filter(Boolean).join("   ");
+
+  const photoList=[]; const refOf={};
+  activeParts().forEach(p=>PARTS[p].units.forEach((u,ui)=>u.items.forEach((it,ii)=>{
+    const arr=state.photos[p][ui][ii];
+    if (!arr.length) return;
+    const nums=[];
+    arr.forEach(src=>{
+      photoList.push({ n:photoList.length+1, src, p, ui, ii, unit:u.name, item:it, score:state.scores[p][ui][ii], remark:state.remarks[p][ui][ii]||"" });
+      nums.push(photoList.length);
+    });
+    refOf[`${p}-${ui}-${ii}`]=nums;
+  })));
+
+  activeParts().forEach(p=>{
+    const part=PARTS[p], pc=partCalc(p);
+    newPage();
+    place(`<div class="pt">${esc(part.code)}  ${esc(part.title)}</div>
+      <div class="fields">
+        <div>School / Site: &nbsp;${esc(schoolName())}</div><div>Inspection by: &nbsp;${esc(state.meta.inspector||"")}</div>
+        <div>Date &amp; Time of Inspection: &nbsp;${esc(fmtDT(state.meta.dt))}</div><div>Inspection No: &nbsp;${esc(state.meta.auditNo||"")}</div>
+        <div>Time of last cleaning: &nbsp;${esc(state.meta.lastClean||"")}</div><div></div>
+      </div>`, false);
+    part.units.forEach((u,ui)=>{
+      const c=unitCalc(p,ui);
+      let rows="";
+      u.items.forEach((it,ii)=>{
+        const v=state.scores[p][ui][ii];
+        rows+=`<tr>${ii===0?`<td class="iu" rowspan="${u.items.length+1}">${esc(u.name)}</td>`:""}<td class="no">${ii+1}</td><td class="el">${esc(it)}</td><td>${numsHtml(v)}</td><td class="rmk">${esc(state.remarks[p][ui][ii]||"")}${refOf[`${p}-${ui}-${ii}`]?` <span class="ref">See ${refOf[`${p}-${ui}-${ii}`].map(n=>"P"+n).join(", ")}</span>`:""}</td></tr>`;
+      });
+      rows+=`<tr><td class="scorelbl" colspan="2">Overall Score / % (${ui+1}):</td><td class="scoreval">${c.counted?`${c.sum} / ${c.max}`:"/"}</td><td class="rmk"></td></tr>`;
+      place(`<table>${TABLE_HEAD}<tbody>${rows}</tbody></table>`, true);
+    });
+    place(`<table>${TABLE_HEAD}<tbody>
+      <tr><td class="scorelbl" colspan="3">Total Rating (Score)</td><td class="scoreval">${pc.sum}</td><td class="rmk"></td></tr>
+      <tr><td class="scorelbl" colspan="3">Maximum Rating (Score)</td><td class="scoreval">${pc.max}</td><td class="rmk"></td></tr>
+      <tr><td class="scorelbl" colspan="3">Overall Performance Score (%)</td><td class="scoreval">${fmtPct(pc.pct)}</td><td class="rmk"></td></tr>
+    </tbody></table><div class="omit"># omit when necessary</div>`, true);
+    place(`<table class="dt first"><colgroup><col style="width:44px"><col style="width:230px"><col></colgroup><thead><tr><th rowspan="2">Ratings</th><th colspan="2">Definitions</th></tr><tr><th>Description</th><th>Tolerance</th></tr></thead><tbody>
+      ${DEFS.map(d=>`<tr><td class="r">${d[0]}</td><td>${esc(d[1])}</td><td>${esc(d[2])}</td></tr>`).join("")}
+    </tbody></table>
+    <div class="sigs">
+      <div class="sig"><div class="lbl">Inspected By:</div><div class="box">${png1?`<img src="${png1}" alt="">`:""}</div>
+        <div class="sigline">Environmental Quality Auditor<br>Signature &amp; Date</div><div class="signame">${esc(nm1)}</div></div>
+      <div class="sig"><div class="lbl">Inspected By:</div><div class="box">${png2?`<img src="${png2}" alt="">`:""}</div>
+        <div class="sigline">Integrated Facilities Management Contractor<br>Signature &amp; Date</div><div class="signame">${esc(nm2)}</div></div>
+    </div>`, false);
+  });
+
+  if (photoList.length){
+    newPage();
+    place(`<div class="apx-title">APPENDIX — PHOTOGRAPHIC RECORD</div><div class="apx-note">Photographs referenced in the Remarks column ("See P1"), numbered in audit order. ${photoList.length} photograph${photoList.length>1?"s":""} attached.</div>`, false);
+    for (let i=0;i<photoList.length;i+=2){
+      const cards=photoList.slice(i,i+2).map(ph=>{
+        const sc = ph.score==="NA" ? "N/A" : (typeof ph.score==="number" ? ph.score : "—");
+        return `<div class="pcard"><div class="pimg"><img src="${ph.src}" alt=""></div><div class="pcap"><b>P${ph.n}</b> · Part ${esc(PARTS[ph.p].code)} · ${ph.ui+1} ${esc(ph.unit)} · ${ph.ii+1} ${esc(ph.item)} · Score ${sc}${ph.remark?`<br>${esc(ph.remark)}`:""}</div></div>`;
+      }).join("");
+      place(`<div class="prow">${cards}</div>`, false);
+    }
+  }
+
+  const left = `${schoolName()} · ${fmtDT(state.meta.dt)}${state.meta.auditNo?` · Audit ${state.meta.auditNo}`:""}`;
+  pages.forEach((pg,i)=>{
+    pg.querySelector(".pgfoot").innerHTML = `<span>${esc(left)}</span><span>Annex G8/5 · page ${i+1} of ${pages.length}</span>`;
+  });
+  return pages;
+}
+
+let pageCanvases = [];
+async function rasterizePages(pages){
+  const out=[];
+  for (const pg of pages){
+    const canvas = await html2canvas(pg, { scale:2, backgroundColor:"#ffffff", logging:false, scrollX:0, scrollY:0, windowWidth:794, windowHeight:1123 });
+    out.push(canvas);
+  }
+  return out;
+}
+function buildPdfFromCanvases(canvases){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:"mm", format:"a4", compress:true });
+  canvases.forEach((c,i)=>{
+    if (i>0) doc.addPage();
+    doc.addImage(c.toDataURL("image/jpeg",0.9), "JPEG", 0, 0, 210, 297, undefined, "FAST");
+  });
+  return doc;
+}
+
+/* ---------- PDF save (one file, all ticked parts) ---------- */
+let lastPdfName="";
+async function savePdf(){
+  const dl = await getDownloads();
+  if (!dl) throw {code:"unavailable"};
+  if (!window.jspdf) throw {code:"nolib", message:"PDF maker did not load — check the connection and reload"};
+  const doc=buildPdfFromCanvases(pageCanvases);
+  const fn=baseFilename()+".pdf";
+  await dl.save({ filename:fn, data:doc.output("blob") });
+  lastPdfName=fn;
+  return fn;
+}
+function pdfFailMsg(err){
+  const code=err&&err.code;
+  if (code==="declined"||code==="unavailable") return `PDF save cancelled. Tap <b>Download PDF</b> to try again.`;
+  if (code==="rate_limited") return `A save prompt is already open. Finish that one, then tap <b>Download PDF</b> again.`;
+  const sp = (typeof mcpNs!=="undefined"&&mcpNs) ? ` Or skip the download: tap <b>Save PDF to SharePoint</b> below and the file goes straight into your ECC folder.` : "";
+  if (code==="unavailable"||code==="not_granted"||code==="capability_disabled"||code==="capability_removed")
+    return `The pages are built, but a PDF download is not offered in this view. <a href="https://claude.ai/artifact/RhxcRTE9BUx3wLaudaJe4C" target="_blank" rel="noopener">Open this form in a browser tab</a> (Chrome or Safari, signed in to claude.ai), and the PDF save is offered there. The draft is kept per browser, so for a proper PDF it is best to do the audit in the browser tab from the start.${sp} The same pages are below as images in the meantime.`;
+  return `PDF download didn't go through (${esc((err&&err.message)||code||"unavailable")}). Tap <b>Download PDF</b> to try again.${sp} The page images are below as well.`;
+}
+async function onDownloadClick(btn){
+  if (!pageCanvases.length){ generate(false); return; }
+  const old=btn.textContent; btn.disabled=true; btn.textContent="Saving PDF…";
+  try { const fn=await savePdf(); pdfMsg.innerHTML=`<p class="msg ok">Saved as ${esc(fn)}. Now file it: SharePoint → General → ECC, and send a copy to the ECC and FME.</p>`; }
+  catch(err){ pdfMsg.innerHTML=`<p class="msg">${pdfFailMsg(err)}</p>`; }
+  finally { btn.disabled=false; btn.textContent=old; }
+}
+document.getElementById("btn-dl").addEventListener("click", e=>onDownloadClick(e.currentTarget));
+document.getElementById("btn-pdf2").addEventListener("click", ()=>generate(false));
+
+/* ---------- Finish flow ---------- */
+const warnSlot=document.getElementById("warn-slot");
+const pdfMsg=document.getElementById("pdf-msg");
+function getDownloads(){
+  return Promise.resolve({ save: async ({filename, data})=>{
+    const url=URL.createObjectURL(data); const a=document.createElement("a");
+    a.href=url; a.download=filename; a.rel="noopener"; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 60000); return {status:"saved"};
+  }});
+}
+function canShareFiles(){ try{ return !!(navigator.share && navigator.canShare && navigator.canShare({files:[new File(["x"],"x.pdf",{type:"application/pdf"})]})); }catch(_){ return false; } }
+async function sharePdf(btn){
+  if (!pageCanvases.length){ generate(false); return; }
+  const old=btn.textContent; btn.disabled=true; btn.textContent="Preparing…";
+  try{
+    const fn=baseFilename()+".pdf"; const blob=buildPdfFromCanvases(pageCanvases).output("blob");
+    const file=new File([blob], fn, {type:"application/pdf"});
+    await navigator.share({ files:[file], title:fn });
+    pdfMsg.innerHTML=`<p class="msg ok">Shared ${esc(fn)}. In Outlook, paste the To, Cc, subject and text from Step 5 (Copy all).</p>`;
+  }catch(err){ if (!(err && err.name==="AbortError")) pdfMsg.innerHTML=`<p class="msg">Share did not go through (${esc((err&&err.message)||"")}). Tap <b>Download PDF</b> instead.</p>`; }
+  finally{ btn.disabled=false; btn.textContent=old; }
+}
+document.getElementById("btn-share").addEventListener("click", e=>sharePdf(e.currentTarget));
+function unscoredSummary(){
+  const out=[];
+  for (const p of activeParts()){
+    PARTS[p].units.forEach((u,ui)=>{
+      const miss=[];
+      u.items.forEach((_,ii)=>{ if (state.scores[p][ui][ii]===null) miss.push(ii+1); });
+      if (miss.length) out.push(`Part ${PARTS[p].code} · ${u.name}: item${miss.length>1?"s":""} ${miss.join(", ")}`);
+    });
+  }
+  return out;
+}
+function noPhotoSummary(){
+  const out=[];
+  for (const p of activeParts()){
+    PARTS[p].units.forEach((u,ui)=>{
+      u.items.forEach((it,ii)=>{ if (needsPhoto(p,ui,ii)) out.push(`Part ${PARTS[p].code} · ${u.name} · ${ii+1} ${it} (score ${state.scores[p][ui][ii]})`); });
+    });
+  }
+  return out;
+}
+function showPages(canvases, pdfSaved){
+  const card=document.getElementById("pages-card");
+  const list=document.getElementById("pages-list");
+  const how=document.getElementById("savehow");
+  const base=baseFilename();
+  list.innerHTML="";
+  canvases.forEach((c,i)=>{
+    const item=document.createElement("div"); item.className="page-item";
+    const img=document.createElement("img"); img.src=c.toDataURL("image/jpeg",0.85); img.alt=`${base} page ${i+1}`;
+    const row=document.createElement("div"); row.className="pi-row";
+    row.innerHTML=`<span>${esc(base)} — page ${i+1} of ${canvases.length}</span>`;
+    const cp=document.createElement("button"); cp.type="button"; cp.className="btn ghost small"; cp.textContent="Copy image";
+    cp.addEventListener("click", async ()=>{
+      try{
+        const blob = await new Promise(res=>c.toBlob(res,"image/png"));
+        await navigator.clipboard.write([new ClipboardItem({"image/png":blob})]);
+        cp.textContent="Copied"; setTimeout(()=>cp.textContent="Copy image",1800);
+      }catch(_){ cp.textContent="Press and hold / right-click to save"; setTimeout(()=>cp.textContent="Copy image",2500); }
+    });
+    row.appendChild(cp);
+    item.appendChild(img); item.appendChild(row); list.appendChild(item);
+  });
+  how.innerHTML = pdfSaved
+    ? `<b>PDF ready above.</b> These are the same pages, kept here for reference. To send a page by WhatsApp, press and hold it (phone) or right-click it (laptop) and save the image.`
+    : `<b>One save instead of ${canvases.length}:</b> the first picture below is all ${canvases.length} pages joined into one long image. Press and hold it (phone) or right-click it (laptop) and save once, named <b>${esc(base)}</b>. The single pages follow if you need them separately. For one proper PDF file, tap <b>Download PDF</b> above (needs you signed in to claude.ai in this browser or the Claude app).`;
+  if (!pdfSaved && canvases.length>1){
+    const st=document.createElement("div"); st.className="stitch";
+    const big=stitchCanvases(canvases, 0.6);
+    const img=document.createElement("img"); img.src=big.toDataURL("image/jpeg",0.82); img.alt=`${base} — all pages`;
+    const row=document.createElement("div"); row.className="pi-row";
+    row.innerHTML=`<span>${esc(base)} — all ${canvases.length} pages in one image</span>`;
+    st.appendChild(img); st.appendChild(row); list.prepend(st);
+  }
+  const top=document.createElement("div"); top.className="pdf-actions"; top.style.margin="0 0 12px";
+  const dlb=document.createElement("button"); dlb.type="button"; dlb.className="btn dl"; dlb.textContent=`Download PDF (${canvases.length} page${canvases.length>1?"s":""}, one file)`;
+  dlb.addEventListener("click", ()=>onDownloadClick(dlb));
+  top.appendChild(dlb); list.prepend(top);
+  card.hidden=false;
+  card.scrollIntoView({behavior:"smooth", block:"start"});
+}
+async function generate(force){
+  pdfMsg.innerHTML="";
+  const missing = unscoredSummary();
+  const noPhoto = noPhotoSummary();
+  if ((missing.length || noPhoto.length) && !force){
+    let html = `<div class="warnbox">`;
+    if (noPhoto.length){
+      html += `<b>${noPhoto.length} item${noPhoto.length>1?"s":""} scored below ${PHOTO_BELOW} with no photo</b> — the ECC rule is that every score below ${PHOTO_BELOW} carries a photo in the Appendix.<ul>${noPhoto.slice(0,8).map(m=>`<li>${esc(m)}</li>`).join("")}${noPhoto.length>8?`<li>…and more</li>`:""}</ul>`;
+    }
+    if (missing.length){
+      html += `<b>${missing.length} unit${missing.length>1?"s have":" has"} unscored items</b> — they will print blank and drop out of the maximum score (same as omitting on paper).<ul>${missing.slice(0,8).map(m=>`<li>${esc(m)}</li>`).join("")}${missing.length>8?`<li>…and more</li>`:""}</ul>`;
+    }
+    html += `<button class="btn primary" id="w-go" type="button">Generate anyway</button> <button class="btn ghost" id="w-back" type="button">Back to scoring</button></div>`;
+    warnSlot.innerHTML = html;
+    document.getElementById("w-go").addEventListener("click",()=>{ warnSlot.innerHTML=""; generate(true); });
+    document.getElementById("w-back").addEventListener("click",()=>{ warnSlot.innerHTML=""; });
+    warnSlot.scrollIntoView({behavior:"smooth", block:"center"});
+    return;
+  }
+  warnSlot.innerHTML="";
+  const btn=document.getElementById("btn-pdf"), btn2=document.getElementById("btn-pdf2");
+  btn.disabled=true; btn.textContent="Building pages…"; btn2.disabled=true; btn2.textContent="Building pages… (10–40 s)";
+  pdfMsg.innerHTML=`<p class="msg">Building the pages. Keep this tab open; it takes a little while on a phone.</p>`;
+  try {
+    if (typeof html2canvas!=="function") throw new Error("page renderer did not load — check the connection and reload");
+    const pages=buildPaperPages();
+    pageCanvases = await rasterizePages(pages); spFile=null;
+    document.getElementById("paper-stage").innerHTML="";
+    let saved=false;
+    document.getElementById("btn-dl").hidden=false;
+    document.getElementById("btn-share").hidden=!canShareFiles();
+    saved=true;
+    pdfMsg.innerHTML=`<p class="msg ok">PDF ready: <b>${esc(baseFilename()+".pdf")}</b> (${pageCanvases.length} pages). ${canShareFiles()?"Tap <b>Share PDF</b> to send it to Outlook, WhatsApp or Files, or ":"Tap "}<b>Download PDF</b> to save it. Then file it: SharePoint → General → ECC, and copy the ECC and FME.</p>`;
+    if (mcpNs) setStatus("sp-status", currentSpFolder() ? "PDF ready. Tap <b>Save PDF to SharePoint</b>." : "PDF ready. Find your ECC folder, then tap <b>Save PDF to SharePoint</b>.");
+    showPages(pageCanvases, saved);
+  } catch(err){
+    pdfMsg.innerHTML=`<p class="msg err">Could not build the pages (${esc((err&&err.message)||err)}). Try again.</p>`;
+  } finally {
+    btn.disabled=false; btn.textContent="Generate PDF"; btn2.disabled=false; btn2.textContent="Compile into one PDF";
+  }
+}
+document.getElementById("btn-pdf").addEventListener("click",()=>generate(false));
+
+let resetArmed=false, resetTimer=null;
+document.getElementById("btn-reset").addEventListener("click", e=>{
+  const b=e.currentTarget;
+  if (!resetArmed){
+    resetArmed=true; b.textContent="Tap again to clear all";
+    resetTimer=setTimeout(()=>{ resetArmed=false; b.textContent="Reset"; },3500);
+    return;
+  }
+  clearTimeout(resetTimer); resetArmed=false; b.textContent="Reset";
+  for (const p of PART_KEYS){ state.scores[p]=blankScores(p); state.remarks[p]=blankRemarks(p); state.photos[p]=blankPhotos(p); }
+  state.sigs.eqa.strokes=[]; state.sigs.ifm.strokes=[];
+  state.meta.auditNo="";
+  document.getElementById("f-auditno").value="";
+  try{ localStorage.removeItem(LS_KEY); }catch(_){}
+  renderParts(); pads.eqa.redraw(); pads.ifm.redraw(); pdfMsg.innerHTML=""; warnSlot.innerHTML="";
+  document.getElementById("pages-card").hidden=true; document.getElementById("pages-list").innerHTML=""; document.getElementById("btn-dl").hidden=true; pageCanvases=[]; spFile=null;
+  setDraftDot("");
+});
+
+/* ---------- Distribution ---------- */
+const cbreSel = CBRE_CC.map(c=>c.on);
+function distKey(){ return "ecc-dist-"+(state.meta.school||"X"); }
+function renderDist(){
+  const box=document.getElementById("dist-cbre");
+  box.innerHTML = CBRE_CC.map((c,i)=>`<label class="dist-row"><input type="checkbox" data-i="${i}" ${cbreSel[i]?"checked":""}><span><span class="dn">${esc(c.n)}</span><br><span class="de">${esc(c.e)}</span></span></label>`).join("");
+  box.querySelectorAll("input").forEach(cb=>cb.addEventListener("change",e=>{ cbreSel[+e.target.dataset.i]=e.target.checked; updateMailto(); }));
+  let saved={to:"",cc:""}; try{ saved=JSON.parse(localStorage.getItem(distKey())||"{}"); }catch(_){}
+  document.getElementById("dist-to").value=saved.to||"";
+  document.getElementById("dist-cc").value=saved.cc||"";
+  updateMailto();
+}
+function splitAddrs(v){ return (v||"").split(/[\n,;]+/).map(x=>x.trim()).filter(x=>/@/.test(x)); }
+function distLists(){
+  const to=splitAddrs(document.getElementById("dist-to").value);
+  const cc=splitAddrs(document.getElementById("dist-cc").value).concat(CBRE_CC.filter((c,i)=>cbreSel[i]).map(c=>c.e));
+  return {to, cc};
+}
+function distSubject(){
+  const no = state.meta.auditNo ? ` · Audit ${state.meta.auditNo}` : "";
+  const a = state.on.a ? partCalc("a") : null;
+  const pct = a && a.pct!==null ? ` · ${fmtPct(a.pct)}` : "";
+  return `ECC Audit (Annex G8/5) · ${schoolName()} · ${fmtDT(state.meta.dt)||fmtD(todayISO())}${no}${pct}`;
+}
+function itemLabel(x){ return typeof x==="string" ? x : (x.name||x.title||x.label||x.text||""); }
+function distParts(link){
+  const parts=[];
+  parts.push({p:"Dear OM,"});
+  const when=`${fmtDT(state.meta.dt)||"[date]"}${state.meta.auditNo?` (Audit ${state.meta.auditNo})`:""}`;
+  if (link) parts.push({p:`Please find the ECC audit for ${schoolName()}, carried out on ${when}, at the link below.`, link});
+  else parts.push({p:`Please find attached the ECC audit for ${schoolName()}, carried out on ${when}.`});
+  const sum=["Summary"];
+  activeParts().forEach(p=>{ const c=partCalc(p); if(c.max>0) sum.push(`Part ${PARTS[p].code}: ${c.sum} / ${c.max} · ${fmtPct(c.pct)}`); });
+  parts.push({lines:sum});
+  const low=[];
+  activeParts().forEach(p=>PARTS[p].units.forEach((u,ui)=>u.items.forEach((it,ii)=>{ const v=state.scores[p][ui][ii]; if(typeof v==="number"&&v<PHOTO_BELOW) low.push(`${itemLabel(u)} · ${itemLabel(it)} · score ${v}`); })));
+  if (low.length) parts.push({p:`Items scored below ${PHOTO_BELOW} (photos in the Appendix):`, ul:low});
+  parts.push({p:"The cleaning contractor has been informed of the items above. Please let me know if you would like to walk any area together."});
+  parts.push({p:"Thank you."});
+  parts.push({lines:["Best regards,", state.meta.inspector||"[name]", "Environmental Quality Auditor · CBRE GWS Zone 9 / S&W 1"]});
+  return parts;
+}
+function distBody(link){
+  const out=[];
+  distParts(link).forEach(pt=>{
+    if (pt.p) out.push(pt.p);
+    if (pt.link) out.push(`${pt.link.name}: ${pt.link.url}`);
+    if (pt.lines) out.push(...pt.lines);
+    if (pt.ul) pt.ul.forEach(l=>out.push(`- ${l}`));
+    out.push("");
+  });
+  return out.join("\n").trim();
+}
+/* HTML for the Outlook draft: only p, br, a, ul, li (the connector's allowlist). */
+function distBodyHtml(link){
+  return distParts(link).map(pt=>{
+    let h="";
+    if (pt.p) h+=`<p>${esc(pt.p)}</p>`;
+    if (pt.link) h+=`<p><a href="${esc(pt.link.url)}">${esc(pt.link.name)}</a></p>`;
+    if (pt.lines) h+=`<p>${pt.lines.map(esc).join("<br>")}</p>`;
+    if (pt.ul) h+=`<ul>${pt.ul.map(l=>`<li>${esc(l)}</li>`).join("")}</ul>`;
+    return h;
+  }).join("");
+}
+function updateMailto(){
+  const {to,cc}=distLists();
+  document.getElementById("mailto-link").href=`mailto:${encodeURIComponent(to.join(","))}?cc=${encodeURIComponent(cc.join(","))}&subject=${encodeURIComponent(distSubject())}&body=${encodeURIComponent(distBody())}`;
+  document.getElementById("dist-note").innerHTML=`<b>${to.length}</b> To · <b>${cc.length}</b> Cc for ${esc(schoolName())}. Two ways. <b>Share PDF</b> (Step 4) → Outlook starts a new email with the PDF attached; then paste with <b>Copy all</b>. Or <b>Open in mail app</b> opens Outlook with To, Cc, subject and text filled in; then attach the downloaded PDF.`;
+}
+async function copyText(btn, text, label){
+  try{ await navigator.clipboard.writeText(text); btn.textContent="Copied"; }
+  catch(_){ const ta=document.createElement("textarea"); ta.value=text; document.body.appendChild(ta); ta.select(); try{ document.execCommand("copy"); btn.textContent="Copied"; }catch(e){ btn.textContent="Select and copy manually"; } ta.remove(); }
+  setTimeout(()=>btn.textContent=label,1800);
+}
+document.getElementById("cp-to").addEventListener("click",e=>copyText(e.currentTarget, distLists().to.join("; "), "Copy To"));
+document.getElementById("cp-cc").addEventListener("click",e=>copyText(e.currentTarget, distLists().cc.join("; "), "Copy Cc"));
+document.getElementById("cp-subj").addEventListener("click",e=>copyText(e.currentTarget, distSubject(), "Copy subject"));
+document.getElementById("cp-body").addEventListener("click",e=>copyText(e.currentTarget, distBody(), "Copy email text"));
+document.getElementById("cp-all").addEventListener("click",e=>{ const {to,cc}=distLists(); copyText(e.currentTarget, `To: ${to.join("; ")}\nCc: ${cc.join("; ")}\nSubject: ${distSubject()}\n\n${distBody()}`, "Copy all (To, Cc, subject, text)"); });
+function saveDist(){ try{ localStorage.setItem(distKey(), JSON.stringify({to:document.getElementById("dist-to").value, cc:document.getElementById("dist-cc").value})); }catch(_){} updateMailto(); }
+document.getElementById("dist-to").addEventListener("input",saveDist);
+document.getElementById("dist-cc").addEventListener("input",saveDist);
+document.getElementById("f-school").addEventListener("change", ()=>{ renderDist(); loadSpFolder(); });
+
+/* ---------- Microsoft 365 via the viewer's own claude.ai connector (mcp capability) ----------
+   Only lights up on the Outlook edition of this page, where the connector is declared. Everything is
+   done as the signed-in viewer: a draft in their Outlook (never sent from here) and a file in their SharePoint. */
+const M365="Microsoft 365";
+let mcpNs=null, mcpFileArgs=false, spFile=null;
+function spKey(){ return "ecc-spfolder-"+(state.meta.school||"X"); }
+function blocksText(r){ try{ return (r&&r.content||[]).filter(b=>b&&b.type==="text").map(b=>b.text).join("\n"); }catch(_){ return ""; } }
+function blocksJson(r){ const out=[]; (r&&r.content||[]).forEach(b=>{ if(b&&b.type==="text"){ try{ const j=JSON.parse(b.text); if(j&&typeof j==="object") out.push(j); }catch(_){} } }); return out; }
+function mcpFix(err){
+  const c=err&&err.code, m=esc((err&&err.message)||"");
+  switch(c){
+    case "needs_reauth": return "Microsoft 365 needs to be reconnected: claude.ai → Settings → Connectors → Microsoft 365 → Reconnect, then tap again.";
+    case "server_not_connected": return "Microsoft 365 is not connected to your claude.ai account. Add it under Settings → Connectors, then reload this page.";
+    case "selection_required": return "You have more than one Microsoft 365 connector. Choose one when claude.ai asks, then tap again.";
+    case "not_in_manifest": case "consent_required": return "Microsoft 365 was not allowed for this page. Reload the page and allow it when asked.";
+    case "blocked_by_policy": case "approval_required": return "Your organisation's policy blocks this action from a page. Use the Copy buttons instead.";
+    case "tool_error": return "Microsoft 365 reported an error: "+m;
+    case "server_unavailable": case "upstream_error": case "rate_limited": return "Microsoft 365 did not answer ("+esc(c)+"). Wait a moment and tap again.";
+    case "cancelled": return "Cancelled.";
+    case "too_big": return "The PDF is too large to send through the connector from this device ("+m+"). Use Download PDF and upload it to SharePoint yourself.";
+    case "no_pages": return "Compile the PDF first (Step 4), then save it to SharePoint.";
+    case "no_folder": return "Find and pick your ECC folder first.";
+    case "no_to": return "Key at least one To address first.";
+    default: return "Could not reach Microsoft 365 ("+esc(c||"unknown")+"). "+m;
+  }
+}
+function setStatus(id, html, ok){ const el=document.getElementById(id); el.className="note msg"+(ok?" ok":""); el.innerHTML=html; }
+async function mcpInit(){
+  try{ if(!(window.claude&&typeof window.claude.use==="function")) return; mcpNs=await window.claude.use("mcp"); }catch(_){ mcpNs=null; }
+  if(!mcpNs) return;
+  document.getElementById("sp-block").hidden=false;
+  document.getElementById("draft-block").hidden=false;
+  loadSpFolder();
+  let lt=null; try{ lt=await mcpNs.listTools(); }catch(err){ setStatus("draft-status", mcpFix(err)); return; }
+  mcpFileArgs=!!(lt&&lt.fileArgs);
+  const srv=lt&&lt.servers&&lt.servers.find(x=>x.server===M365);
+  if(!srv) setStatus("draft-status", mcpFix({code:"server_not_connected"}));
+  else if(srv.authStatus==="needs_reauth") setStatus("draft-status", mcpFix({code:"needs_reauth"}));
+}
+function loadSpFolder(){
+  const sel=document.getElementById("sp-sel"); let f=null;
+  try{ f=JSON.parse(localStorage.getItem(spKey())||"null"); }catch(_){}
+  sel.innerHTML=""; sel.hidden=!f;
+  if(f){ const o=document.createElement("option"); o.value=JSON.stringify(f); o.textContent=f.name+"  ·  "+(f.path||""); sel.appendChild(o); setStatus("sp-status", `Folder for ${esc(schoolName())}: <b>${esc(f.name)}</b>`); }
+  else setStatus("sp-status", "");
+}
+function currentSpFolder(){ const sel=document.getElementById("sp-sel"); if(sel.hidden||!sel.value) return null; try{ return JSON.parse(sel.value); }catch(_){ return null; } }
+async function spFind(){
+  const q=document.getElementById("sp-q").value.trim(); if(!q) return;
+  const btn=document.getElementById("sp-find"); btn.disabled=true; setStatus("sp-status","Searching SharePoint…");
+  try{
+    const r=await mcpNs.callTool(M365,"sharepoint_folder_search",{name:q,limit:20});
+    const items=blocksJson(r).filter(j=>j.driveId&&j.id&&j.name).map(j=>({driveId:j.driveId,id:j.id,name:j.name,path:(j.webUrl||"").replace(/^https:\/\/[^/]+\/(teams|sites)\//,"").replace(/\/Shared Documents\//," › ").replace(/\//g," › ")}));
+    const sel=document.getElementById("sp-sel"); sel.innerHTML="";
+    if(!items.length){ sel.hidden=true; setStatus("sp-status","No folder found with that name. Try part of the name, e.g. \"Irfan - APS\"."); return; }
+    items.forEach(f=>{ const o=document.createElement("option"); o.value=JSON.stringify(f); o.textContent=f.name+"  ·  "+f.path; sel.appendChild(o); });
+    sel.hidden=false; sel.selectedIndex=0; saveSpFolder();
+    setStatus("sp-status", `${items.length} folder${items.length>1?"s":""} found. Pick the right one; it is remembered for ${esc(schoolName())}.`);
+  }catch(err){ setStatus("sp-status", mcpFix(err)); }
+  finally{ btn.disabled=false; }
+}
+function saveSpFolder(){ const f=currentSpFolder(); try{ if(f) localStorage.setItem(spKey(), JSON.stringify(f)); }catch(_){} }
+function blobToB64(blob){ return new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(String(fr.result).split(",")[1]||""); fr.onerror=()=>rej({code:"bad_request",message:"could not read the PDF"}); fr.readAsDataURL(blob); }); }
+function buildSmallPdf(canvases, scale, q){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:"mm", format:"a4", compress:true });
+  canvases.forEach((c,i)=>{
+    const cv=document.createElement("canvas"); cv.width=Math.round(c.width*scale); cv.height=Math.round(c.height*scale);
+    cv.getContext("2d").drawImage(c,0,0,cv.width,cv.height);
+    if (i>0) doc.addPage();
+    doc.addImage(cv.toDataURL("image/jpeg",q), "JPEG", 0, 0, 210, 297, undefined, "FAST");
+  });
+  return doc.output("blob");
+}
+/* The connector accepts files up to 1 MiB, so step the page images down until the PDF fits. */
+function pdfUnder(canvases, limit){
+  let blob=buildPdfFromCanvases(canvases).output("blob");
+  const steps=[[0.8,0.7],[0.65,0.6],[0.55,0.5],[0.5,0.42],[0.42,0.38]];
+  for (let k=0; blob.size>limit && k<steps.length; k++) blob=buildSmallPdf(canvases, steps[k][0], steps[k][1]);
+  return blob;
+}
+async function spUpload(){
+  const btn=document.getElementById("btn-sp"); const old=btn.textContent;
+  try{
+    if(!pageCanvases.length) throw {code:"no_pages"};
+    const f=currentSpFolder(); if(!f) throw {code:"no_folder"};
+    if(!window.jspdf) throw {code:"nolib", message:"PDF maker did not load"};
+    btn.disabled=true; btn.textContent="Uploading…"; setStatus("sp-status","Building the PDF and uploading to SharePoint…");
+    const fn=baseFilename()+".pdf";
+    const limit = mcpFileArgs ? 1000000 : 700000;
+    const blob=pdfUnder(pageCanvases, limit);
+    if(blob.size>limit) throw {code:"too_big", message:Math.round(blob.size/1024)+" KB with "+pageCanvases.length+" pages"};
+    const input={driveId:f.driveId, parentItemId:f.id, filename:fn, conflictBehavior:"rename", expectedBytes:blob.size};
+    if(mcpFileArgs) input.contentBase64={$file:{data:blob, name:fn, type:"application/pdf"}};
+    else input.contentBase64=await blobToB64(blob);
+    const r=await mcpNs.callTool(M365,"sharepoint_upload_file",input);
+    const txt=blocksText(r); const p=r&&r.payload;
+    const web=(p&&typeof p==="object"&&p.webUrl)||(txt.match(/webUrl:\s*(\S+)/)||[])[1]||"";
+    const nm=(p&&typeof p==="object"&&p.name)||(txt.match(/name:\s*(.+)/)||[])[1]||fn;
+    spFile={name:nm.trim(), url:web};
+    setStatus("sp-status", `Saved to SharePoint as <b>${esc(spFile.name)}</b> in ${esc(f.name)}${web?` · <a href="${esc(web)}" target="_blank" rel="noopener">open</a>`:""}. The Outlook draft will link to it.`, true);
+  }catch(err){ setStatus("sp-status", mcpFix(err)); }
+  finally{ btn.disabled=false; btn.textContent=old; }
+}
+async function makeDraft(){
+  const btn=document.getElementById("btn-draft"); const old=btn.textContent;
+  try{
+    const {to,cc}=distLists(); if(!to.length) throw {code:"no_to"};
+    btn.disabled=true; btn.textContent="Creating draft…"; setStatus("draft-status","Creating the draft in your Outlook…");
+    const input={to, cc, subject:distSubject(), body:distBodyHtml(spFile), bodyType:"html"};
+    const r=await mcpNs.callTool(M365,"outlook_create_draft",input);
+    const txt=blocksText(r); const p=r&&r.payload;
+    const link=(p&&typeof p==="object"&&(p.webLink||p.webUrl))||(txt.match(/https:\/\/outlook\.[^\s"'<>]+/)||[])[0]||"";
+    setStatus("draft-status", `Draft created in your Outlook Drafts${link?` · <a href="${esc(link)}" target="_blank" rel="noopener">open it in Outlook</a>`:""}. ${spFile?"It links to the PDF on SharePoint.":"Attach the PDF in Outlook (or save it to SharePoint first so the draft links to it)."} Review, then press Send there.`, true);
+  }catch(err){ setStatus("draft-status", mcpFix(err)); }
+  finally{ btn.disabled=false; btn.textContent=old; }
+}
+document.getElementById("sp-find").addEventListener("click", spFind);
+document.getElementById("sp-q").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); spFind(); } });
+document.getElementById("sp-sel").addEventListener("change", saveSpFolder);
+document.getElementById("btn-sp").addEventListener("click", spUpload);
+document.getElementById("btn-draft").addEventListener("click", makeDraft);
+
+/* ---------- One long image for phones ---------- */
+function stitchCanvases(canvases, scale){
+  const w=Math.round(canvases[0].width*scale), h=Math.round(canvases[0].height*scale), gap=Math.round(24*scale);
+  const out=document.createElement("canvas"); out.width=w; out.height=h*canvases.length+gap*(canvases.length-1);
+  const ctx=out.getContext("2d"); ctx.fillStyle="#9a9a9a"; ctx.fillRect(0,0,out.width,out.height);
+  canvases.forEach((c,i)=>ctx.drawImage(c,0,i*(h+gap),w,h));
+  return out;
+}
+
+/* ---------- Boot ---------- */
+function todayISO(){ const d=new Date(); const p=n=>String(n).padStart(2,"0"); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; }
+function nowLocalDT(){ const d=new Date(); const p=n=>String(n).padStart(2,"0"); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`; }
+
+let pads={};
+function boot(fromHot){
+  if (fromHot && fromHot.state) state=fromHot.state;
+  else restore();
+  if (!state.photos) state.photos=blankAll(blankPhotos);
+  for (const p of PART_KEYS){ if (!state.scores[p]) state.scores[p]=blankScores(p); if (!state.remarks[p]) state.remarks[p]=blankRemarks(p); if (!state.photos[p]) state.photos[p]=blankPhotos(p); if (state.on[p]===undefined) state.on[p]=false; }
+  state.on.a=true;
+  if (!state.meta.dt) state.meta.dt=nowLocalDT();
+  if (!state.sigs.eqa.date) state.sigs.eqa.date=todayISO();
+  if (!state.sigs.ifm.date) state.sigs.ifm.date=todayISO();
+  if (!hadDraft && !fromHot && state.meta.school==="APS") state.on.b = true;
+
+  document.getElementById("f-school").value=state.meta.school;
+  document.getElementById("f-school-other-wrap").hidden = state.meta.school!=="OTHER";
+  document.getElementById("f-school-other").value=state.meta.schoolOther||"";
+  renderDist();
+  document.getElementById("f-auditno").value=state.meta.auditNo||"";
+  document.getElementById("f-dt").value=state.meta.dt||"";
+  document.getElementById("f-lastclean").value=state.meta.lastClean||"";
+  document.getElementById("f-inspector").value=state.meta.inspector||"";
+  document.getElementById("f-ifmrep").value=state.meta.ifmRep||"";
+  for (const p of ["b","c","d","e"]) document.getElementById("tog-"+p).checked=!!state.on[p];
+  if (state.on.c||state.on.d||state.on.e) document.getElementById("more-parts").open=true;
+  document.getElementById("f-eqa-name").value=state.sigs.eqa.name||"";
+  document.getElementById("f-eqa-date").value=state.sigs.eqa.date||"";
+  document.getElementById("f-ifm-name").value=state.sigs.ifm.name||"";
+  document.getElementById("f-ifm-date").value=state.sigs.ifm.date||"";
+
+  renderDefs();
+  renderParts();
+  pads.eqa=makePad("eqa");
+  pads.ifm=makePad("ifm");
+  mcpInit();
+}
+if (window.claude && window.claude.hot && window.claude.hot.snapshot){
+  try{ window.claude.hot.snapshot(()=>({state})); }catch(_){}
+}
+/* Soft access gate for the pilot: deters casual viewers, not a security control. Code is set below. */
+const GATE_CODE="ZONE9";
+(function(){
+  let ok=false; try{ ok = localStorage.getItem("ecc-gate")==="ok"; }catch(_){}
+  const g=document.getElementById("gate");
+  if (ok) return;
+  g.hidden=false;
+  document.getElementById("gate-form").addEventListener("submit", e=>{
+    e.preventDefault();
+    const v=document.getElementById("gate-code").value.trim().toUpperCase();
+    if (v===GATE_CODE){ try{ localStorage.setItem("ecc-gate","ok"); }catch(_){} g.hidden=true; }
+    else document.getElementById("gate-err").textContent="That code is not right. Check with the FME.";
+  });
+  setTimeout(()=>document.getElementById("gate-code").focus(),50);
+})();
+const hot = window.claude && window.claude.hot;
+if (hot && hot.ready) hot.ready(d=>boot(d||{}));
+else boot(hot && hot.data ? hot.data : null);
+</script>
+
+<script>
+if ("serviceWorker" in navigator) { window.addEventListener("load", ()=>{ navigator.serviceWorker.register("sw.js").catch(()=>{}); }); }
+</script>
+</body>
+</html>

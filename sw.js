@@ -1,12 +1,18 @@
-/* Offline cache for the ECC audit app: the page, icons and the two PDF libraries. */
-const CACHE = "ecc-app-v1";
-const CORE = ["./", "./index.html", "./manifest.webmanifest", "./icon-180.png", "./icon-512.png",
+/* Offline cache for the ECC audit app. The page itself is fetched fresh whenever online (so owner updates reach every phone); libraries and icons are cached. */
+const CACHE = "ecc-app-v2";
+const LIBS = ["./manifest.webmanifest", "./icon-180.png", "./icon-512.png",
   "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js",
   "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"];
-self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => Promise.allSettled(CORE.map(u => c.add(u)))).then(() => self.skipWaiting())); });
+self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => Promise.allSettled(["./", "./index.html"].concat(LIBS).map(u => c.add(u)))).then(() => self.skipWaiting())); });
 self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener("fetch", e => {
   if (e.request.method !== "GET") return;
+  const isPage = e.request.mode === "navigate" || /\/(index\.html)?$/.test(new URL(e.request.url).pathname);
+  if (isPage) {
+    e.respondWith(fetch(e.request).then(res => { const copy = res.clone(); caches.open(CACHE).then(c => c.put(e.request, copy)).catch(() => {}); return res; })
+      .catch(() => caches.match(e.request).then(hit => hit || caches.match("./index.html"))));
+    return;
+  }
   e.respondWith(caches.match(e.request).then(hit => hit || fetch(e.request).then(res => {
     const copy = res.clone(); caches.open(CACHE).then(c => c.put(e.request, copy)).catch(() => {}); return res;
   }).catch(() => hit)));

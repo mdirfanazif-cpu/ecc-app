@@ -1605,16 +1605,19 @@ if (window.claude && window.claude.hot && window.claude.hot.snapshot){
   try{ window.claude.hot.snapshot(()=>({state})); }catch(_){}
 }
 /* Soft access gate for the pilot: deters casual viewers, not a security control. Code is set below. */
+/* Owner controls: change GATE_CODE and every phone must key the new code; set APP_ENABLED=false to switch the form off for everyone. */
 const GATE_CODE="ZONE9";
+const APP_ENABLED=true;
 (function(){
-  let ok=false; try{ ok = localStorage.getItem("ecc-gate")==="ok"; }catch(_){}
+  let ok=false; try{ ok = APP_ENABLED && localStorage.getItem("ecc-gate")===GATE_CODE; }catch(_){}
   const g=document.getElementById("gate");
   if (ok) return;
   g.hidden=false;
   document.getElementById("gate-form").addEventListener("submit", e=>{
     e.preventDefault();
     const v=document.getElementById("gate-code").value.trim().toUpperCase();
-    if (v===GATE_CODE){ try{ localStorage.setItem("ecc-gate","ok"); }catch(_){} g.hidden=true; }
+    if (!APP_ENABLED){ document.getElementById("gate-err").textContent="This form has been switched off by its owner."; return; }
+    if (v===GATE_CODE){ try{ localStorage.setItem("ecc-gate",GATE_CODE); }catch(_){} g.hidden=true; }
     else document.getElementById("gate-err").textContent="That code is not right. Check with the FME.";
   });
   setTimeout(()=>document.getElementById("gate-code").focus(),50);

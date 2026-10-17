@@ -11,6 +11,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-180.png">
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.26.1/lib/msal-browser.min.js"></script>
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui;background:#faf9f5}img{max-width:100%}[hidden]{display:none!important}</style>
 </head>
 <body>
@@ -297,6 +298,7 @@ label.field textarea{font-family:var(--font-ui); font-size:14px; color:var(--ink
   .masthead h1{font-size:22px}
   .chip{min-width:31px; height:35px}
 }
+.g-owner{margin-top:10px;font-size:12px;color:var(--muted)} .g-owner summary{cursor:pointer} .g-owner .field{margin-top:8px}
 </style>
 
 <div class="gate" id="gate" hidden>
@@ -456,6 +458,23 @@ label.field textarea{font-family:var(--font-ui); font-size:14px; color:var(--ink
       <button class="btn primary" id="btn-share" type="button" hidden>Share PDF (Outlook / WhatsApp / Files)</button>
     </div>
     <div id="pdf-msg"></div>
+    <div class="m365-block" id="g-block">
+      <p class="dist-group">Microsoft 365 (your CBRE account)</p>
+      <p class="note" id="g-pending">Phase 2: sign in with your CBRE account to file the PDF to SharePoint and create the Outlook draft from here. Waiting for CBRE IT to register the app. Until then use <b>Share PDF</b> or <b>Download PDF</b>.</p>
+      <div id="g-ready" hidden>
+        <div class="pdf-actions"><button class="btn dl" id="g-signin" type="button">Sign in with CBRE account</button><button class="btn ghost small" id="g-signout" type="button" hidden>Sign out</button></div>
+        <p class="note" id="g-who"></p>
+        <p class="hint">Paste the link of your ECC month folder on SharePoint once per school (open the folder in SharePoint → Copy link). It is remembered on this device.</p>
+        <div class="sp-row"><input id="g-folder" type="url" placeholder="https://cbre.sharepoint.com/teams/…/OCT 26"><button type="button" id="g-folder-save">Save</button></div>
+        <div class="pdf-actions"><button class="btn dl" id="g-sp" type="button">Save PDF to SharePoint</button></div>
+        <p class="note" id="g-sp-status"></p>
+      </div>
+      <details class="g-owner"><summary>Microsoft 365 setup (owner only)</summary>
+        <label class="field">Application (client) ID from CBRE IT<input id="g-clientid" type="text" autocomplete="off" placeholder="00000000-0000-0000-0000-000000000000"></label>
+        <label class="field">Tenant ID (leave as organizations unless IT says otherwise)<input id="g-tenant" type="text" autocomplete="off" placeholder="organizations"></label>
+        <div class="pdf-actions"><button class="btn ghost small" id="g-cfg-save" type="button">Save setup and reload</button></div>
+      </details>
+    </div>
     <div class="m365-block" id="sp-block" hidden aria-hidden="true">
       <p class="dist-group">Save to SharePoint (your Microsoft 365 account)</p>
       <p class="hint">Find your ECC folder once per school (e.g. "Irfan - APS"). It is remembered on this device. The compiled PDF is uploaded straight into that folder, so no download is needed.</p>
@@ -483,6 +502,10 @@ label.field textarea{font-family:var(--font-ui); font-size:14px; color:var(--ink
     <div class="m365-block" id="draft-block" hidden style="border-top:0; margin-top:10px; padding-top:0">
       <div class="pdf-actions"><button class="btn primary" id="btn-draft" type="button">Create draft in Outlook</button></div>
       <p class="note" id="draft-status">Creates the email in your Outlook Drafts with the To, Cc, subject and text filled in, and a link to the PDF on SharePoint if it was saved there. You review and press Send in Outlook.</p>
+    </div>
+    <div class="m365-block" id="g-draft-block" hidden style="border-top:0; margin-top:10px; padding-top:0">
+      <div class="pdf-actions"><button class="btn primary" id="g-draft" type="button">Create draft in Outlook (PDF attached)</button></div>
+      <p class="note" id="g-draft-status">Creates the email in your Outlook Drafts with the To, Cc, subject, text and the PDF attached, plus the SharePoint link if it was saved there. You review and press Send in Outlook.</p>
     </div>
     <p class="dist-group">Or copy into Outlook yourself</p>
     <div class="dist-actions">
@@ -1311,7 +1334,7 @@ async function generate(force){
   try {
     if (typeof html2canvas!=="function") throw new Error("page renderer did not load — check the connection and reload");
     const pages=buildPaperPages();
-    pageCanvases = await rasterizePages(pages); spFile=null;
+    pageCanvases = await rasterizePages(pages); spFile=null; gFile=null;
     document.getElementById("paper-stage").innerHTML="";
     let saved=false;
     document.getElementById("btn-dl").hidden=false;
@@ -1343,7 +1366,7 @@ document.getElementById("btn-reset").addEventListener("click", e=>{
   document.getElementById("f-auditno").value="";
   try{ localStorage.removeItem(LS_KEY); }catch(_){}
   renderParts(); pads.eqa.redraw(); pads.ifm.redraw(); pdfMsg.innerHTML=""; warnSlot.innerHTML="";
-  document.getElementById("pages-card").hidden=true; document.getElementById("pages-list").innerHTML=""; document.getElementById("btn-dl").hidden=true; pageCanvases=[]; spFile=null;
+  document.getElementById("pages-card").hidden=true; document.getElementById("pages-list").innerHTML=""; document.getElementById("btn-dl").hidden=true; pageCanvases=[]; spFile=null; gFile=null;
   setDraftDot("");
 });
 
@@ -1429,7 +1452,7 @@ document.getElementById("cp-all").addEventListener("click",e=>{ const {to,cc}=di
 function saveDist(){ try{ localStorage.setItem(distKey(), JSON.stringify({to:document.getElementById("dist-to").value, cc:document.getElementById("dist-cc").value})); }catch(_){} updateMailto(); }
 document.getElementById("dist-to").addEventListener("input",saveDist);
 document.getElementById("dist-cc").addEventListener("input",saveDist);
-document.getElementById("f-school").addEventListener("change", ()=>{ renderDist(); loadSpFolder(); });
+document.getElementById("f-school").addEventListener("change", ()=>{ renderDist(); loadSpFolder(); gLoadFolder(); });
 
 /* ---------- Microsoft 365 via the viewer's own claude.ai connector (mcp capability) ----------
    Only lights up on the Outlook edition of this page, where the connector is declared. Everything is
@@ -1554,6 +1577,93 @@ document.getElementById("sp-sel").addEventListener("change", saveSpFolder);
 document.getElementById("btn-sp").addEventListener("click", spUpload);
 document.getElementById("btn-draft").addEventListener("click", makeDraft);
 
+
+/* ---------- Microsoft 365 via Microsoft Graph (Phase 2) ----------
+   Needs an app registration in the CBRE Entra tenant. Until G_CLIENT_ID (or the owner setup below) is filled in, the block
+   shows as pending. Everything runs as the signed-in user: a draft in their own Outlook (never sent from here) and a file
+   in a SharePoint folder they already have access to. No secrets live in this page. */
+const G_CLIENT_ID="";
+const G_TENANT="organizations";
+const G_SCOPES=["User.Read","Mail.ReadWrite","Files.ReadWrite.All"];
+let gApp=null, gAccount=null, gFile=null;
+function gCfg(){ let c={clientId:G_CLIENT_ID, tenant:G_TENANT}; try{ const s=JSON.parse(localStorage.getItem("ecc-m365")||"null"); if(s&&s.clientId) c=s; }catch(_){} return c; }
+function gFolderKey(){ return "ecc-gfolder-"+(state.meta.school||"X"); }
+function gSetStatus(id, html, ok){ const el=document.getElementById(id); el.className="note msg"+(ok?" ok":""); el.innerHTML=html; }
+function gErr(e){ const m=(e&&(e.message||e.errorMessage))||String(e); return esc(String(m)).slice(0,300); }
+function gRedirectUri(){ return location.origin+location.pathname.replace(/index\.html$/,""); }
+async function gInit(){
+  const cfg=gCfg();
+  document.getElementById("g-clientid").value=cfg.clientId||""; document.getElementById("g-tenant").value=cfg.tenant||"organizations";
+  if(!cfg.clientId || !window.msal) return;
+  document.getElementById("g-pending").hidden=true; document.getElementById("g-ready").hidden=false; document.getElementById("g-draft-block").hidden=false;
+  gLoadFolder();
+  try{
+    gApp=new msal.PublicClientApplication({ auth:{ clientId:cfg.clientId, authority:"https://login.microsoftonline.com/"+(cfg.tenant||"organizations"), redirectUri:gRedirectUri() }, cache:{ cacheLocation:"localStorage" } });
+    await gApp.initialize();
+    const r=await gApp.handleRedirectPromise();
+    gAccount=(r&&r.account)||gApp.getAllAccounts()[0]||null;
+  }catch(e){ gSetStatus("g-who","Sign-in setup failed: "+gErr(e)); return; }
+  gRenderAccount();
+}
+function gRenderAccount(){ const w=document.getElementById("g-who"); document.getElementById("g-signout").hidden=!gAccount; document.getElementById("g-signin").hidden=!!gAccount; w.textContent=gAccount?("Signed in as "+(gAccount.name||gAccount.username)):"Not signed in. Sign in opens the normal CBRE Microsoft login, then returns here."; }
+async function gToken(){
+  if(!gApp) throw new Error("Microsoft 365 is not set up yet");
+  if(!gAccount) throw new Error("Sign in with your CBRE account first");
+  try{ return (await gApp.acquireTokenSilent({scopes:G_SCOPES, account:gAccount})).accessToken; }
+  catch(e){ await gApp.acquireTokenRedirect({scopes:G_SCOPES, account:gAccount}); throw new Error("Taking you to the CBRE sign-in; tap again after it returns"); }
+}
+async function graph(path, opt){
+  const t=await gToken(); opt=opt||{}; opt.headers=Object.assign({Authorization:"Bearer "+t}, opt.headers||{});
+  const r=await fetch("https://graph.microsoft.com/v1.0"+path, opt);
+  if(!r.ok){ let m=r.status+" "+r.statusText; try{ const j=await r.json(); if(j.error&&j.error.message) m=j.error.message; }catch(_){} throw new Error(m); }
+  return r.status===204?null:r.json();
+}
+document.getElementById("g-signin").addEventListener("click", async()=>{ try{ await gApp.loginRedirect({scopes:G_SCOPES}); }catch(e){ gSetStatus("g-who","Sign-in failed: "+gErr(e)); } });
+document.getElementById("g-signout").addEventListener("click", async()=>{ try{ await gApp.logoutRedirect({account:gAccount}); }catch(e){ gAccount=null; gRenderAccount(); } });
+document.getElementById("g-cfg-save").addEventListener("click", ()=>{ const c={clientId:document.getElementById("g-clientid").value.trim(), tenant:document.getElementById("g-tenant").value.trim()||"organizations"}; try{ if(c.clientId) localStorage.setItem("ecc-m365",JSON.stringify(c)); else localStorage.removeItem("ecc-m365"); }catch(_){} location.reload(); });
+function gLoadFolder(){ let u=""; try{ u=localStorage.getItem(gFolderKey())||""; }catch(_){} document.getElementById("g-folder").value=u; gSetStatus("g-sp-status", u?`Folder link for ${esc(schoolName())} saved.`:""); }
+document.getElementById("g-folder-save").addEventListener("click", ()=>{ const u=document.getElementById("g-folder").value.trim(); try{ if(u) localStorage.setItem(gFolderKey(),u); else localStorage.removeItem(gFolderKey()); }catch(_){} gLoadFolder(); });
+function shareId(url){ const b=btoa(unescape(encodeURIComponent(url))).replace(/=+$/,"").replace(/\//g,"_").replace(/\+/g,"-"); return "u!"+b; }
+async function gUpload(){
+  const btn=document.getElementById("g-sp"); const old=btn.textContent;
+  try{
+    if(!pageCanvases.length) throw new Error("Compile the PDF first (Step 4)");
+    const url=document.getElementById("g-folder").value.trim(); if(!url) throw new Error("Paste and save your SharePoint folder link first");
+    btn.disabled=true; btn.textContent="Uploading…"; gSetStatus("g-sp-status","Finding the folder…");
+    const folder=await graph("/shares/"+shareId(url)+"/driveItem?$select=id,name,folder,file,parentReference,webUrl");
+    if(!folder.folder) throw new Error("That link is not a folder. Open the month folder in SharePoint and copy its link.");
+    const driveId=folder.parentReference.driveId, fn=baseFilename()+".pdf";
+    const blob=pdfUnder(pageCanvases, 3800000);
+    gSetStatus("g-sp-status","Uploading "+esc(fn)+" ("+Math.round(blob.size/1024)+" KB)…");
+    let item;
+    if(blob.size<3900000){ item=await graph(`/drives/${driveId}/items/${folder.id}:/${encodeURIComponent(fn)}:/content?@microsoft.graph.conflictBehavior=rename`, {method:"PUT", headers:{"Content-Type":"application/pdf"}, body:blob}); }
+    else{
+      const s=await graph(`/drives/${driveId}/items/${folder.id}:/${encodeURIComponent(fn)}:/createUploadSession`, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({item:{"@microsoft.graph.conflictBehavior":"rename"}})});
+      const r=await fetch(s.uploadUrl,{method:"PUT", headers:{"Content-Range":`bytes 0-${blob.size-1}/${blob.size}`}, body:blob}); if(!r.ok) throw new Error("upload "+r.status); item=await r.json();
+    }
+    gFile={name:item.name, url:item.webUrl};
+    gSetStatus("g-sp-status", `Saved to SharePoint as <b>${esc(item.name)}</b> in ${esc(folder.name)}${item.webUrl?` · <a href="${esc(item.webUrl)}" target="_blank" rel="noopener">open</a>`:""}. The Outlook draft will link to it.`, true);
+  }catch(e){ gSetStatus("g-sp-status", gErr(e)); }
+  finally{ btn.disabled=false; btn.textContent=old; }
+}
+async function gDraft(){
+  const btn=document.getElementById("g-draft"); const old=btn.textContent;
+  try{
+    const {to,cc}=distLists(); if(!to.length) throw new Error("Key at least one To address first");
+    if(!pageCanvases.length) throw new Error("Compile the PDF first (Step 4)");
+    btn.disabled=true; btn.textContent="Creating draft…"; gSetStatus("g-draft-status","Creating the draft in your Outlook…");
+    const fn=baseFilename()+".pdf"; const blob=pdfUnder(pageCanvases, 2200000); const b64=await blobToB64(blob);
+    const msg={ subject:distSubject(), body:{contentType:"HTML", content:distBodyHtml(gFile)},
+      toRecipients:to.map(a=>({emailAddress:{address:a}})), ccRecipients:cc.map(a=>({emailAddress:{address:a}})),
+      attachments:[{"@odata.type":"#microsoft.graph.fileAttachment", name:fn, contentType:"application/pdf", contentBytes:b64}] };
+    const m=await graph("/me/messages",{method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(msg)});
+    gSetStatus("g-draft-status", `Draft created in your Outlook Drafts with <b>${esc(fn)}</b> attached${m&&m.webLink?` · <a href="${esc(m.webLink)}" target="_blank" rel="noopener">open it in Outlook</a>`:""}. Review, then press Send there.`, true);
+  }catch(e){ gSetStatus("g-draft-status", gErr(e)); }
+  finally{ btn.disabled=false; btn.textContent=old; }
+}
+document.getElementById("g-sp").addEventListener("click", gUpload);
+document.getElementById("g-draft").addEventListener("click", gDraft);
+
 /* ---------- One long image for phones ---------- */
 function stitchCanvases(canvases, scale){
   const w=Math.round(canvases[0].width*scale), h=Math.round(canvases[0].height*scale), gap=Math.round(24*scale);
@@ -1599,7 +1709,7 @@ function boot(fromHot){
   renderParts();
   pads.eqa=makePad("eqa");
   pads.ifm=makePad("ifm");
-  mcpInit();
+  mcpInit(); gInit();
 }
 if (window.claude && window.claude.hot && window.claude.hot.snapshot){
   try{ window.claude.hot.snapshot(()=>({state})); }catch(_){}

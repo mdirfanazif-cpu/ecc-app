@@ -1,0 +1,20 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><title>ECC control file</title>
+<style>body{font:16px system-ui,sans-serif;margin:0;padding:24px 16px;background:#f5f4f0;color:#1f2630}main{max-width:520px;margin:auto}
+h1{font-size:20px}label{display:block;margin:16px 0 6px;font-weight:600}input{width:100%;box-sizing:border-box;font:inherit;padding:12px;border:1px solid #ccc;border-radius:8px}
+button{font:inherit;font-weight:700;padding:12px 16px;border:0;border-radius:8px;background:#1d7f6a;color:#fff;margin-top:14px}
+pre{white-space:pre-wrap;word-break:break-all;background:#fff;border:1px solid #ccc;border-radius:8px;padding:12px;font-size:13px}p{color:#5f6974}</style></head>
+<body><main><h1>ECC form · new control file</h1>
+<p>Makes the text for control.json. Nothing is sent anywhere; it is worked out on this phone.</p>
+<label for="c">New access code</label><input id="c" autocomplete="off" placeholder="e.g. SW1-NOV26">
+<label><input type="checkbox" id="on" checked style="width:auto"> Form switched on</label>
+<button id="go" type="button">Make control file text</button>
+<pre id="out" hidden></pre><button id="cp" type="button" hidden>Copy</button>
+<p id="next" hidden>Next: GitHub → ecc-app → control.json → pencil (edit) → select all → paste → Commit changes. Live in about a minute.</p>
+<script>
+async function fp(v){const d=await crypto.subtle.digest("SHA-256",new TextEncoder().encode("ecc-app|"+v.trim().toUpperCase()));return Array.from(new Uint8Array(d)).map(x=>x.toString(16).padStart(2,"0")).join("");}
+document.getElementById("go").onclick=async()=>{const c=document.getElementById("c").value;if(!c.trim())return;
+const t=JSON.stringify({enabled:document.getElementById("on").checked,codeHash:await fp(c)},null,2);
+const o=document.getElementById("out");o.textContent=t;o.hidden=false;document.getElementById("cp").hidden=false;document.getElementById("next").hidden=false;};
+document.getElementById("cp").onclick=async e=>{try{await navigator.clipboard.writeText(document.getElementById("out").textContent);e.target.textContent="Copied";}catch(_){e.target.textContent="Select the text and copy";}};
+</script></main></body></html>

@@ -1,1 +1,8 @@
-@/tmp/claude-0/-home-user-Work/d04ab75e-6675-5536-8de2-3cccdf18888d/scratchpad/eccv2/dist/control.json
+{
+  "enabled": true,
+  "codeHash": "0ccd33b5d1c156c00965f8a25cd6dc21c7749437cdb312f348e70dd9ce602848",
+  "codeHashes": [
+    "0ccd33b5d1c156c00965f8a25cd6dc21c7749437cdb312f348e70dd9ce602848",
+    "f256922702d46932ce9c7d58b4ba0e708a77dbfc40cb66286f59ee28c0db0f03"
+  ]
+}

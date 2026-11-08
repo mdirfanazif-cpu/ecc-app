@@ -1,1 +1,218 @@
-@/tmp/claude-0/-home-user-Work/d04ab75e-6675-5536-8de2-3cccdf18888d/scratchpad/eccv2/dist/index.html
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#22406a">
+<meta name="apple-mobile-web-app-title" content="ECC Audit">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<meta name="robots" content="noindex,nofollow">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui;background:#faf9f5}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>ECC Audit G8/5</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="ecc.css">
+
+<div class="gate" id="gate" hidden>
+  <form class="box" id="gate-form">
+    <h2>ECC Audit G8/5 — restricted preview</h2>
+    <p>This digital form is in pilot for the CBRE S&amp;W 1 (Zone 9) and S&amp;W 6 (Zone 10) teams. Enter the access code given by your FME or ECC team lead to continue.</p>
+    <input id="gate-code" type="text" autocomplete="off" placeholder="Access code" aria-label="Access code">
+    <div class="err" id="gate-err"></div>
+    <button class="btn primary" type="submit">Open the form</button>
+    <p>© 2026 Muhammad Irfan Bin Ahmad Nazif. Made available to the CBRE SW1 &amp; SW6 teams for the pilot. Not to be copied or redistributed.</p>
+  </form>
+</div>
+<div class="wrap">
+  <header class="masthead">
+    <p class="eyebrow" id="zone-eyebrow">MOE IFM · Zone 9 / S&amp;W 1 · Contract Annex G8/5</p>
+    <h1>Environmental Quality Audit</h1>
+    <div class="zone-badge" id="zone-badge">S&amp;W 1 · Zone 9</div>
+    <p>Digital copy of the hardcopy ECC audit. Tap a score per element, N/A to omit, sign on screen, then generate the finished pages, which look and file exactly like the paper one.</p>
+    <div class="restricted">Pilot version · restricted to the CBRE S&amp;W 1 and S&amp;W 6 teams · not yet an official MOE record</div>
+  </header>
+
+  <section class="card" id="setup">
+    <p class="step">Step 1 · Header</p>
+    <h2>Audit header</h2>
+    <p class="hint">Pick your zone, then the school. Same fields as the top of the hardcopy.</p>
+    <div class="zone-switch" id="zone-switch">
+      <button type="button" data-zone="SW1" class="zs on">S&amp;W 1 <small>Zone 9 · Joseph's team</small></button>
+      <button type="button" data-zone="SW6" class="zs">S&amp;W 6 <small>Zone 10 · Alfred's team</small></button>
+    </div>
+    <div class="grid2">
+      <label class="field">School / Site
+        <select id="f-school"></select>
+      </label>
+      <label class="field" id="f-school-other-wrap" hidden>Other school name
+        <input id="f-school-other" type="text" placeholder="School name">
+      </label>
+      <label class="field">Audit / Inspection No
+        <input id="f-auditno" type="text" inputmode="numeric" placeholder="e.g. 6">
+      </label>
+      <label class="field">Date &amp; time of inspection
+        <input id="f-dt" type="datetime-local">
+      </label>
+      <label class="field">Time of last cleaning
+        <input id="f-lastclean" type="time">
+      </label>
+      <label class="field">Inspection by (Environmental Quality Auditor)
+        <input id="f-inspector" type="text" placeholder="e.g. Joseph Ong">
+      </label>
+      <label class="field">IFM Contractor rep (counter-signs)
+        <input id="f-ifmrep" type="text" placeholder="e.g. Muhammad Irfan (FME)">
+      </label>
+    </div>
+    <div class="part-toggles">
+      <label class="ptog"><input type="checkbox" id="tog-a" checked disabled>
+        <span><b>Part (a) — Cleaning Services for Schools</b><br><span class="sub">8 inspection units · always filled</span></span></label>
+      <label class="ptog"><input type="checkbox" id="tog-b">
+        <span><b>Part (b) — MOE Kindergarten Centres and Kindergarten Care Centres</b><br><span class="sub">6 units · tick only if the school has an MK / KCare on site (Alexandra Pri has one). Skip if none.</span></span></label>
+      <details class="more" id="more-parts">
+        <summary>Other site types in the annex (optional)</summary>
+        <div class="part-toggles">
+          <label class="ptog"><input type="checkbox" id="tog-c">
+            <span><b>Part (c) — Additional Cleaning Services</b><br><span class="sub">1 unit (Special Rooms) · only when instructed</span></span></label>
+          <label class="ptog"><input type="checkbox" id="tog-d">
+            <span><b>Part (d) — Hostels &amp; Boarding Schools</b><br><span class="sub">7 units · for schools with a hostel</span></span></label>
+          <label class="ptog"><input type="checkbox" id="tog-e">
+            <span><b>Part (e) — Outdoor Adventure Learning Centres</b><br><span class="sub">9 units · OALC sites only</span></span></label>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <p class="step-plain">Step 2 · Score every element</p>
+  <div id="parts-root"></div>
+
+  <details class="defs">
+    <summary>Ratings definitions (0–10) — same table as the hardcopy</summary>
+    <div class="defs-tbl-wrap">
+      <table class="defs-tbl">
+        <thead><tr><th>Rating</th><th>Description</th><th>Tolerance</th></tr></thead>
+        <tbody id="defs-body"></tbody>
+      </table>
+    </div>
+  </details>
+
+  <section class="card" id="sig-card">
+    <p class="step">Step 3 · Sign</p>
+    <h2>Inspected by</h2>
+    <p class="hint">Sign with finger or mouse. The same two signatures print on every part of this audit, exactly where the hardcopy signature blocks sit.</p>
+    <div class="sig-grid">
+      <div class="sig-box">
+        <span class="sig-title">Environmental Quality Auditor</span>
+        <span class="sig-sub">Signature &amp; date</span>
+        <div class="sig-canvas-wrap"><canvas id="sig-eqa"></canvas><span class="sig-ph" id="ph-eqa">Sign here</span></div>
+        <button class="sig-clear" id="clr-eqa" type="button">Clear signature</button>
+        <div class="grid2">
+          <label class="field">Name<input id="f-eqa-name" type="text" placeholder="e.g. Joseph Ong"></label>
+          <label class="field">Date<input id="f-eqa-date" type="date"></label>
+        </div>
+      </div>
+      <div class="sig-box">
+        <span class="sig-title">Integrated Facilities Management Contractor</span>
+        <span class="sig-sub">Signature &amp; date</span>
+        <div class="sig-canvas-wrap"><canvas id="sig-ifm"></canvas><span class="sig-ph" id="ph-ifm">Sign here</span></div>
+        <button class="sig-clear" id="clr-ifm" type="button">Clear signature</button>
+        <div class="grid2">
+          <label class="field">Name<input id="f-ifm-name" type="text" placeholder="e.g. Muhammad Irfan"></label>
+          <label class="field">Date<input id="f-ifm-date" type="date"></label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="finish-card">
+    <p class="step">Step 4 · Compile PDF &amp; file</p>
+    <h2>Finish</h2>
+    <div id="warn-slot"></div>
+    <p class="note"><b>Compile into one PDF</b> builds every ticked part (e.g. Cleaning + MK) as one file, laid out like the hardcopy: 0–10 row with the score circled, unit scores, total / max / overall %, definitions and both signature blocks. Filename follows the team's pattern, e.g. <b>APS - 30.9.2026 - Audit 6 - ECC G8-5.pdf</b>.</p>
+    <p class="note">Then file it: <b>SharePoint → Documents → General → ECC</b> (school and month folder), and send a copy to the ECC and the FME.</p>
+    <div id="inapp-slot"></div>
+    <div class="pdf-actions">
+      <button class="btn primary" id="btn-pdf2" type="button">Compile into one PDF</button>
+      <button class="btn dl" id="btn-dl" type="button" hidden>Download PDF</button>
+    </div>
+    <div id="pdf-msg"></div>
+    <div id="ready-slot"></div>
+    <div class="m365-block" id="sp-block" hidden>
+      <p class="dist-group">Save to SharePoint (your Microsoft 365 account)</p>
+      <p class="hint">Find your ECC folder once per school (e.g. "Irfan - APS"). It is remembered on this device. The compiled PDF is uploaded straight into that folder, so no download is needed.</p>
+      <div class="sp-row"><input id="sp-q" type="text" placeholder="Folder name, e.g. Irfan - APS"><button type="button" id="sp-find">Find folder</button></div>
+      <select id="sp-sel" hidden></select>
+      <div class="pdf-actions"><button class="btn dl" id="btn-sp" type="button">Save PDF to SharePoint</button></div>
+      <p class="note" id="sp-status"></p>
+    </div>
+  </section>
+
+  <section class="card" id="send-card">
+    <p class="step">Step 5 · Send</p>
+    <h2>Email the report</h2>
+    <p class="hint">To and Cc fill themselves from the built-in directory for the school you picked (OM, MOE SCD, your zone’s ECC team lead, the school’s FME — and your own email if you key it once below). Edit anything; your edits are kept on this device per school. Nothing is sent from this page: you attach the PDF and press Send in your own Outlook.</p>
+    <div class="grid2">
+      <label class="field">To · school OM (one address per line)
+        <textarea id="dist-to" rows="3" placeholder="om_name@schools.gov.sg"></textarea>
+      </label>
+      <label class="field">Cc · MOE SCD and others (one per line)
+        <textarea id="dist-cc" rows="3" placeholder="scd_name@moe.gov.sg"></textarea>
+      </label>
+    </div>
+    <div class="dist-actions"><button class="btn ghost small" id="dist-reset" type="button">↺ Reset To/Cc to directory</button></div>
+    <p class="dist-group">Cc · CBRE</p>
+    <div id="dist-cbre"></div>
+    <div class="m365-block" id="draft-block" hidden style="border-top:0; margin-top:10px; padding-top:0">
+      <div class="pdf-actions"><button class="btn primary" id="btn-draft" type="button">Create draft in Outlook</button></div>
+      <p class="note" id="draft-status">Creates the email in your Outlook Drafts with the To, Cc, subject and text filled in, and a link to the PDF on SharePoint if it was saved there. You review and press Send in Outlook.</p>
+    </div>
+    <p class="dist-group">Or copy into Outlook yourself</p>
+    <div class="dist-actions">
+      <button class="btn ghost small" id="cp-to" type="button">Copy To</button>
+      <button class="btn ghost small" id="cp-cc" type="button">Copy Cc</button>
+      <button class="btn ghost small" id="cp-subj" type="button">Copy subject</button>
+      <button class="btn ghost small" id="cp-body" type="button">Copy email text</button>
+      <button class="btn ghost small" id="cp-all" type="button">Copy all (To, Cc, subject, text)</button>
+      <a class="btn ghost small" id="mailto-link" href="#">Open in default mail app</a>
+    </div>
+    <p class="dist-group">Email it from your phone</p>
+    <div class="pdf-actions">
+      <a class="btn outlook" id="outlook-link" href="#">Open Outlook app (To, Cc, subject and text filled in)</a>
+    </div>
+    <p class="note" id="dist-note"></p>
+  </section>
+
+  <section class="card" id="pages-card" hidden>
+    <h2>Finished audit pages</h2>
+    <div class="savehow" id="savehow"></div>
+    <div class="pages-list" id="pages-list"></div>
+  </section>
+
+  <div class="footnote">
+    <p>All five parts of Annex G8/5 are available above. Sample-photo reference pages are in the master: SharePoint → Tender Doc (Original) → Volume 2 – Annexes.</p>
+    <p>Working tool for the CBRE Zone 9 team. Before making the digital copy the official record in place of wet-ink hardcopy, confirm acceptance with the FM and the school's SCD.</p>
+    <p>Photos: tap "Add photo" under any element's remark. Scores below 5 need one. Photos print on Appendix pages after the signatures and are referenced as "See P1" in the Remarks column, so the audit pages themselves stay unchanged.</p>
+    <p>Digital form developed by Muhammad 'Irfan Bin Ahmad Nazif, FME, CBRE GWS Zone 9 / S&amp;W 1, October 2026.</p>
+  </div>
+</div>
+
+<div class="bar">
+  <div class="bar-inner">
+    <div class="bar-scores" id="bar-scores"></div>
+    <span class="draft-dot" id="draft-dot"></span>
+    <button class="btn ghost" id="btn-reset" type="button">Reset</button>
+    <button class="btn primary" id="btn-pdf" type="button">Generate PDF</button>
+  </div>
+</div>
+
+<div id="paper-stage" aria-hidden="true"></div>
+
+<script src="lib/html2canvas.min.js"></script>
+<script src="lib/jspdf.umd.min.js"></script>
+<script src="ecc-app.js"></script>
+
+
+<script src="ecc-gate.js"></script>
+</body></html>

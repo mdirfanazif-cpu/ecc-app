@@ -34,14 +34,21 @@
     <p>Digital copy of the hardcopy ECC audit. Tap a score per element, N/A to omit, sign on screen, then generate the finished pages, which look and file exactly like the paper one.</p>
     <div class="restricted">Pilot version · restricted to the CBRE S&amp;W 1 and S&amp;W 6 teams · not yet an official MOE record</div>
   </header>
+  <nav class="stepper" id="stepper" aria-label="Steps">
+    <a href="#setup" data-sec="setup"><span class="n">1</span>Header</a>
+    <a href="#score-anchor" data-sec="score-anchor"><span class="n">2</span>Score</a>
+    <a href="#sig-card" data-sec="sig-card"><span class="n">3</span>Sign</a>
+    <a href="#finish-card" data-sec="finish-card"><span class="n">4</span>PDF</a>
+    <a href="#send-card" data-sec="send-card"><span class="n">5</span>Send</a>
+  </nav>
 
   <section class="card" id="setup">
     <p class="step">Step 1 · Header</p>
     <h2>Audit header</h2>
     <p class="hint">Pick your zone, then the school. Same fields as the top of the hardcopy.</p>
     <div class="zone-switch" id="zone-switch">
-      <button type="button" data-zone="SW1" class="zs on">S&amp;W 1 <small>Zone 9 · Joseph's team</small></button>
-      <button type="button" data-zone="SW6" class="zs">S&amp;W 6 <small>Zone 10 · Alfred's team</small></button>
+      <button type="button" data-zone="SW1" class="zs on">S&amp;W 1 <small>Zone 9</small></button>
+      <button type="button" data-zone="SW6" class="zs">S&amp;W 6 <small>Zone 10</small></button>
     </div>
     <div class="grid2">
       <label class="field">School / Site
@@ -85,7 +92,7 @@
     </div>
   </section>
 
-  <p class="step-plain">Step 2 · Score every element</p>
+  <p class="step-plain" id="score-anchor">Step 2 · Score every element</p>
   <div id="parts-root"></div>
 
   <details class="defs">
@@ -101,7 +108,7 @@
   <section class="card" id="sig-card">
     <p class="step">Step 3 · Sign</p>
     <h2>Inspected by</h2>
-    <p class="hint">Sign with finger or mouse. The same two signatures print on every part of this audit, exactly where the hardcopy signature blocks sit.</p>
+    <p class="hint">Sign with finger, stylus or mouse — the pad is full width, so turn a phone sideways for even more room. The same two signatures print on every part of this audit, exactly where the hardcopy signature blocks sit.</p>
     <div class="sig-grid">
       <div class="sig-box">
         <span class="sig-title">Environmental Quality Auditor</span>
